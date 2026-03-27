@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Damas">
+  <meta name="theme-color" content="#0F0E0C">
+  <meta name="description" content="Damas — Carte des Vins & AI Sommelier">
+  <title>Damas — Carte des Vins</title>
+  <style>
+    html, body, #root { margin: 0; padding: 0; min-height: 100vh; min-height: 100dvh; background: #0F0E0C; }
+    body { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+  </style>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useRef } = React;
+
+
+const WINES_DATA = [
+  {n:"Roero Arneis 2024",p:"Tibaldi",pr:17,g:"Arnese",r:"Roero, Piemonte",c:"Italie",cl:"blanc",s:"By the Glass",pf:"Crisp and floral Piedmontese white with white peach, green apple, and almond. Light-bodied with refreshing acidity."},
+  {n:"Kashf 2022",p:"El Sabban",pr:18,g:"Viognier",r:"Mont Liban",c:"Liban",cl:"blanc",s:"By the Glass",pf:"Aromatic Lebanese Viognier with lush stone fruit, apricot blossom, and spice. Full-bodied with silky texture."},
+  {n:"Roc Troucat 2023",p:"La Bancale",pr:18,g:"Carignan Blanc",r:"Roussillon",c:"France",cl:"blanc",s:"By the Glass",pf:"Rare white Carignan from old vines. Mediterranean herbs, citrus peel, and saline minerality."},
+  {n:"Bargylus Blanc 2018",p:"Bargylus",pr:25,g:"Sauvignon Blanc, Chardonnay",r:"Lattakia",c:"Syrie",cl:"blanc",s:"By the Glass",pf:"Syria's iconic white from coastal vineyards. Tropical fruit, flint, and cedar. Elegant with aging potential."},
+  {n:"Origins NV",p:"Keush",pr:20,g:"Voskeat",r:"Vayotz Dzor",c:"Arménie",cl:"bulles",s:"By the Glass",pf:"Traditional method sparkling from Armenia. Fine bubbles, green apple, brioche, and chalky minerality."},
+  {n:"Bulles de Roche 2022",p:"Thierry Germain",pr:24,g:"Chenin Blanc",r:"Crémant de Loire",c:"France",cl:"bulles",s:"By the Glass",pf:"Biodynamic Crémant from a Loire legend. Precise mousse, quince, honeycomb, and tuffeau minerality."},
+  {n:"L'Éclat 2023",p:"Roche en Loire",pr:17,g:"Cabernet Franc, Grolleau",r:"Touraine, Loire",c:"France",cl:"rosé",s:"By the Glass",pf:"Pale Loire rosé with wild strawberry, pink grapefruit, and savory herbal edge. Dry and refreshing."},
+  {n:"Trebbiano Orange 2022",p:"Casale",pr:18,g:"Trebbiano",r:"Toscane",c:"Italie",cl:"orange",s:"By the Glass",pf:"Skin-contact Tuscan Trebbiano. Dried apricot, chamomile, tannic grip, and oxidative nuttiness."},
+  {n:"Ayehoros 2022",p:"Dalamara",pr:17,g:"Xinomavro, Merlot",r:"Macédoine",c:"Grèce",cl:"rouge",s:"By the Glass",pf:"Greek blend with Xinomavro's tannic structure and Merlot's plush fruit. Medium-bodied and earthy."},
+  {n:"Dolcetto d'Alba 2022",p:"Mauro Veglio",pr:18,g:"Dolcetto",r:"Piemonte",c:"Italie",cl:"rouge",s:"By the Glass",pf:"Classic Dolcetto with dark cherry, violet, and bitter almond. Soft tannins, low acidity."},
+  {n:"Mise en Bouche 2023",p:"Darnaud",pr:21,g:"Syrah",r:"Crozes-Hermitage, Rhône",c:"France",cl:"rouge",s:"By the Glass",pf:"Northern Rhône Syrah with cracked pepper, blackberry, and smoked meat. Medium-bodied, savory."},
+  {n:"Liaison 2022",p:"Enderle Moll",pr:22,g:"Pinot Noir",r:"Baden",c:"Allemagne",cl:"rouge",s:"By the Glass",pf:"Ethereal German Pinot Noir with red cherry, rose petal, and forest floor. Light-bodied and silky."},
+  {n:"Bargylus Rouge 2017",p:"Bargylus",pr:27,g:"Syrah, Merlot, Cabernet Sauvignon",r:"Lattakia",c:"Syrie",cl:"rouge",s:"By the Glass",pf:"Syria's flagship red. Dark fruit, garrigue, leather, and cedar. Full-bodied with polished tannins."},
+  {n:"Gran Reserva 2021",p:"Sumarroca",pr:60,g:"Cava Brut Nature",r:"Penedès",c:"Espagne",cl:"bulles",s:"Bulles",pf:"Zero-dosage Cava with toasted almond, citrus, and creamy mousse. Bone-dry precision."},
+  {n:"Bulles 2021",p:"Polisson",pr:62,g:"Méthode Ancestrale",r:"Oka",c:"Québec",cl:"bulles",s:"Bulles",pf:"Natural pétillant from Quebec. Cloudy, funky, cider apple, and gentle effervescence."},
+  {n:"Ces Petits Imprévus 2024",p:"Nival",pr:72,g:"Vidal ancestrale",r:"Lac St Pierre",c:"Québec",cl:"bulles",s:"Bulles",pf:"Ancestral Vidal with tropical fruit, honeyed pear, and fine persistent bubbles."},
+  {n:"Rio degli Sgoccioli 2021",p:"Cinque Campi",pr:75,g:"Lambrusco",r:"Lambrusco",c:"Italie",cl:"bulles",s:"Bulles",pf:"Rouge brut Lambrusco — deep red, bone-dry, sour cherry, violets, and snappy tannic fizz."},
+  {n:"Vues 2023",p:"Lieux Communs",pr:80,g:"Riesling ancestrale",r:"Beamsville",c:"Ontario",cl:"bulles",s:"Bulles",pf:"Canadian ancestral Riesling with lime blossom, petrol, and mineral-driven mousse."},
+  {n:"Origins NV (btl)",p:"Keush",pr:84,g:"Voskeat brut",r:"Vayotz Dzor",c:"Arménie",cl:"bulles",s:"Bulles",pf:"Armenian traditional-method sparkling. Fine bubbles, green apple, brioche, chalky minerality."},
+  {n:"Éphémère 2023",p:"Courault",pr:85,g:"Chenin ancestrale",r:"Loire",c:"France",cl:"bulles",s:"Bulles",pf:"Ethereal Loire pét-nat with quince, white flower, and gentle mousse. Delicate and fleeting."},
+  {n:"Fetembulles 2022",p:"Robinot",pr:100,g:"Chenin ancestrale",r:"Loire",c:"France",cl:"bulles",s:"Bulles",pf:"Biodynamic Chenin pét-nat. Honey, beeswax, and a taut, saline finish."},
+  {n:"Les Années Folles 2022",p:"Robinot",pr:100,g:"Pineau d'Aunis ancestrale",r:"Loire",c:"France",cl:"bulles",s:"Bulles",pf:"Rare sparkling Pineau d'Aunis with white pepper, rose hip, and cranberry."},
+  {n:"Bulles de Roche 2022 (btl)",p:"Thierry Germain",pr:105,g:"Chenin Brut",r:"Loire",c:"France",cl:"bulles",s:"Bulles",pf:"Biodynamic Chenin sparkling from tuffeau limestone. Precise, mineral, quince and brioche."},
+  {n:"I Hope Everyday 2021",p:"Steen",pr:105,g:"Rosé ancestrale",r:"Ardèche",c:"France",cl:"bulles",s:"Bulles",pf:"Joyful rosé pét-nat. Strawberry, watermelon rind, and playful mousse."},
+  {n:"Crémant de Jura 2022",p:"Touraize",pr:110,g:"Brut Nature",r:"Arbois, Jura",c:"France",cl:"bulles",s:"Bulles",pf:"Zero-dosage Jura Crémant with yellow apple, hazelnut, and oxidative Jura edge."},
+  {n:"Prs 2020",p:"Vivanterre",pr:115,g:"Demi-sec",r:"Alsace",c:"France",cl:"bulles",s:"Bulles",pf:"Off-dry Alsatian sparkler with exotic fruit, ginger, and balanced sweetness."},
+  {n:"La Chassornade 2021",p:"Cossard",pr:115,g:"Aligoté ancestrale",r:"Bourgogne",c:"France",cl:"bulles",s:"Bulles",pf:"Burgundian Aligoté pét-nat. Lemony, chalky, and electrifyingly fresh."},
+  {n:"Funambulles 2022",p:"Lafitte",pr:120,g:"Gros Manseng ancestrale",r:"Jurançon",c:"France",cl:"bulles",s:"Bulles",pf:"Southwest pét-nat with tropical punch, quince paste, and tightrope balance."},
+  {n:"L'Artiglio 2019",p:"Cinque Campi",pr:122,g:"Orange ancestrale",r:"Emilia-Romagna",c:"Italie",cl:"bulles",s:"Bulles",pf:"Skin-contact sparkling. Amber hue, dried herb, tangerine peel, tannic savory fizz."},
+  {n:"Segelfalter 2021",p:"Tscheppe",pr:150,g:"Demi-sec Muskateller",r:"Styria",c:"Autriche",cl:"bulles",s:"Bulles",pf:"Austrian Muskateller with intoxicating floral aromatics, lychee, and perfumed palate."},
+  {n:"Cuvée Zéro",p:"Tarlant",pr:130,g:"Extra Brut",r:"Vallée de la Marne",c:"France",cl:"bulles",s:"Champagne",pf:"Zero-dosage grower Champagne. Green apple, chalk, toasted bread. Uncompromising purity."},
+  {n:"Sainte Anne",p:"Chartogne-Taillet",pr:145,g:"Brut",r:"Montagne de Reims",c:"France",cl:"bulles",s:"Champagne",pf:"Single-vineyard grower Champagne. Red fruit, white pepper, creamy vinous palate."},
+  {n:"Garennes",p:"Laval",pr:275,g:"Extra Brut",r:"Vallée de la Marne",c:"France",cl:"bulles",s:"Champagne",pf:"Small-production Marne Champagne. Crystalline purity, citrus blossom, hazelnut."},
+  {n:"La Rue des Noyers",p:"Benoit Dehu",pr:320,g:"Extra Brut",r:"Vallée de la Marne",c:"France",cl:"bulles",s:"Champagne",pf:"Single-parcel from old Pinot Meunier. Rich, vinous, baked apple and spice."},
+  {n:"Cumières",p:"Laval",pr:325,g:"1er Cru, Extra Brut",r:"Vallée de la Marne",c:"France",cl:"bulles",s:"Champagne",pf:"Premier Cru with depth and finesse. Orchard fruit, brioche, mineral-driven finish."},
+  {n:"Les Puits 2016",p:"Émilien Feneuil",pr:360,g:"Blanc de Noir, Extra Brut",r:"Vallée de la Marne",c:"France",cl:"bulles",s:"Champagne",pf:"Vintage Blanc de Noir with power and grace. Red fruit, bread crust, structured."},
+  {n:"Les Pierrières",p:"Ulysse Collin",pr:450,g:"Blanc de Blancs, Extra Brut",r:"Coteaux du Petit Morin",c:"France",cl:"bulles",s:"Champagne",pf:"Cult grower Champagne. Laser-focused minerality, citrus, extraordinary length."},
+  {n:"Largillier",p:"Guillaume Selosse",pr:600,g:"Blanc de Noir, Extra Brut",r:"Côte des Bar",c:"France",cl:"bulles",s:"Champagne",pf:"Son of Jacques Selosse. Pinot Noir-driven with power, spice, oxidative complexity."},
+  {n:"Mareuil sur Aÿ 2014",p:"Philipponat",pr:700,g:"1er Cru Extra Brut",r:"Montagne de Reims",c:"France",cl:"bulles",s:"Champagne",pf:"Aged Premier Cru. Toasted hazelnut, honey, truffle, majestic lingering finish."},
+  {n:"Les Carelles",p:"Jacques Selosse",pr:800,g:"Blanc de Blancs Grand Cru",r:"Le Mesnil-sur-Oger",c:"France",cl:"bulles",s:"Champagne",pf:"Legendary Selosse single-vineyard. Walnut, iodine, profound mineral depth."},
+  {n:"La Côte Faron",p:"Jacques Selosse",pr:800,g:"Blanc de Noir Grand Cru",r:"Aÿ",c:"France",cl:"bulles",s:"Champagne",pf:"Grand Cru Pinot Noir. Powerful, vinous, red fruit, oxidative brilliance."},
+  {n:"Sous le Mont",p:"Jacques Selosse",pr:800,g:"1er Cru Blanc de Noir",r:"Mareuil sur Aÿ",c:"France",cl:"bulles",s:"Champagne",pf:"Premier Cru single-plot. Rich structured Pinot with earth, mushroom, brioche."},
+  {n:"Substance",p:"Jacques Selosse",pr:850,g:"Grand Cru Brut Nature",r:"Avize, Côte des Blancs",c:"France",cl:"bulles",s:"Champagne",pf:"Perpetual reserve solera. Layer upon layer — honey, oxidation, chalk. Transcendent."},
+  {n:"Rosé 2024",p:"Pigeon Hill",pr:60,g:"Hybrides",r:"Saint Armand",c:"Québec",cl:"rosé",s:"Rosé",pf:"Fresh Quebec hybrid rosé with wild berry, rhubarb, and crisp finish."},
+  {n:"La Fuitina 2023",p:"Luca Bambara",pr:65,g:"Nero d'Avola",r:"Sicilia",c:"Italie",cl:"rosé",s:"Rosé",pf:"Sicilian rosé with blood orange, Mediterranean herbs, and mineral palate."},
+  {n:"Riflesso Rosi 2021",p:"Eugenio Rosi",pr:70,g:"Marzemino",r:"Trentino",c:"Italie",cl:"rosé",s:"Rosé",pf:"Distinctive Trentino rosé. Rose petal, pomegranate, alpine freshness, silky texture."},
+  {n:"Pinot Grigio 2020",p:"Sumenjak",pr:80,g:"Pinot Grigio Ramato",r:"Slovénie",c:"Slovénie",cl:"rosé",s:"Rosé",pf:"Copper-hued ramato with dried rose, melon, and tannic savory grip."},
+  {n:"Ward 2023",p:"Heya",pr:88,g:"Tempranillo",r:"Bekaa",c:"Liban",cl:"rosé",s:"Rosé",pf:"Lebanese Tempranillo rosé. Strawberry, spice, garrigue with surprising structure."},
+  {n:"Test Press 2022",p:"Uva",pr:88,g:"Syrah",r:"Roussillon",c:"France",cl:"rosé",s:"Rosé",pf:"Roussillon Syrah rosé with lavender, white pepper, and meaty savory depth."},
+  {n:"Lladoner Pelut 2023",p:"L'Atelier Vigneron",pr:88,g:"Grenache Poilue",r:"Roussillon",c:"France",cl:"rosé",s:"Rosé",pf:"Rare hairy Grenache rosé. Wild strawberry, herbs, rustic Mediterranean character."},
+  {n:"Faustine 2023",p:"Comte Abbatucci",pr:95,g:"Sciaccarellu",r:"Ajaccio, Corse",c:"France",cl:"rosé",s:"Rosé",pf:"Corsican rosé from indigenous grape. Maquis herbs, blood orange, briny minerality."},
+  {n:"Rosé 2023",p:"Roc d'Anglade",pr:100,g:"Carignan",r:"Languedoc",c:"France",cl:"rosé",s:"Rosé",pf:"Cult Languedoc rosé. Pale, precise, white peach, garrigue, taut saline finish."},
+  {n:"Origines 2019",p:"Clos des Jarres",pr:120,g:"Grenache Gris",r:"Roussillon",c:"France",cl:"rosé",s:"Rosé",pf:"Aged Grenache Gris rosé. Dried herbs, candied orange, complex evolved character."},
+  {n:"Sivi Pinot 2021",p:"Keltis",pr:125,g:"Pinot Grigio",r:"Stajerska",c:"Slovénie",cl:"rosé",s:"Rosé",pf:"Slovenian skin-contact Pinot Grigio. Tea rose, apricot skin, grippy oxidative complexity."},
+  {n:"Pompette 2023",p:"Clos des Mourres",pr:75,g:"Grenache Blanc",r:"Côtes du Rhône",c:"France",cl:"blanc",s:"Blanc — France",pf:"Playful southern Rhône white. White peach, anise, round generous palate."},
+  {n:"Roc Troucat 2023 (btl)",p:"La Bancale",pr:78,g:"Carignan Blanc",r:"Roussillon",c:"France",cl:"blanc",s:"Blanc — France",pf:"Rare white Carignan with Mediterranean herbs, lemon zest, saline minerality."},
+  {n:"Paulatim 2022",p:"Les Deux Terres",pr:80,g:"Chardonnay",r:"Ardèche",c:"France",cl:"blanc",s:"Blanc — France",pf:"Pure Ardèche Chardonnay. Citrus, white flower, clean unoaked freshness."},
+  {n:"Madame de M... 2022",p:"Vendange",pr:82,g:"Roussette de Savoie",r:"Savoie",c:"France",cl:"blanc",s:"Blanc — France",pf:"Alpine Roussette with green pear, hazelnut, and mountain-fresh minerality."},
+  {n:"Bourgogne Aligoté 2023",p:"Jeannin-Naltet",pr:85,g:"Aligoté",r:"Bourgogne",c:"France",cl:"blanc",s:"Blanc — France",pf:"Bright Burgundian Aligoté. Lemon curd, green almond, zippy mineral acidity."},
+  {n:"Cours Toujours 2021",p:"Roure",pr:90,g:"Carignan Gris",r:"Roussillon",c:"France",cl:"blanc",s:"Blanc — France",pf:"Rare Carignan Gris from Jajakistan. Herbal, textured, and saline."},
+  {n:"Femme Soleil 2023",p:"Hors Champ",pr:90,g:"Grenache Blanc",r:"Roussillon",c:"France",cl:"blanc",s:"Blanc — France",pf:"Sun-drenched Grenache Blanc. White fruit, herbs, and Mediterranean warmth."},
+  {n:"Petit Trelans 2022",p:"Chabanon",pr:90,g:"Chenin, Rolle",r:"Languedoc",c:"France",cl:"blanc",s:"Blanc — France",pf:"Chenin-Rolle blend from Languedoc. Fresh citrus, garrigue, and mineral tension."},
+  {n:"Jurançon Sec 2023",p:"Lafitte",pr:105,g:"Mansengs",r:"Sud-Ouest",c:"France",cl:"blanc",s:"Blanc — France",pf:"Dry Jurançon with exotic fruit, ginger, and a crisp mineral backbone."},
+  {n:"Corail Blanc 2023",p:"Clos Marinu",pr:115,g:"Vermentino",r:"Ajaccio, Corse",c:"France",cl:"blanc",s:"Blanc — France",pf:"Corsican Vermentino with citrus, Mediterranean herbs, and sea-salt minerality."},
+  {n:"Les Copains d'Abord 2023",p:"Clément Lavallée",pr:115,g:"Sauvignon",r:"Saint-Bris, Bourgogne",c:"France",cl:"blanc",s:"Blanc — France",pf:"Burgundian Sauvignon with fresh citrus, grassy notes, and mineral precision."},
+  {n:"Le Berceau des Fées 2022",p:"Domaine Aux Moines",pr:120,g:"Chenin Blanc",r:"Savennières, Loire",c:"France",cl:"blanc",s:"Blanc — France",pf:"Grand Loire Chenin. Quince, beeswax, powerful mineral backbone. Age-worthy."},
+  {n:"Imalaya 2022",p:"Roc des Anges",pr:120,g:"Carignan Gris",r:"Roussillon",c:"France",cl:"blanc",s:"Blanc — France",pf:"Old-vine Carignan Gris. Layered, textured, herbal with Mediterranean depth."},
+  {n:"Fief de Chaintre 2022",p:"Hardy",pr:120,g:"Melon de Bourgogne",r:"Muscadet, Loire",c:"France",cl:"blanc",s:"Blanc — France",pf:"Serious Muscadet with lees richness, oyster shell, and saline tension."},
+  {n:"Auxilium 2023",p:"Tixier",pr:125,g:"Chardonnay",r:"Chablis, Bourgogne",c:"France",cl:"blanc",s:"Blanc — France",pf:"Crystalline Chablis. Oyster shell, green apple, steely Kimmeridgian minerality."},
+  {n:"Les Voisines 2022",p:"Touraize",pr:128,g:"Chardonnay",r:"Arbois, Jura",c:"France",cl:"blanc",s:"Blanc — France",pf:"Jura Chardonnay with yellow apple, hazelnut, and gentle oxidative complexity."},
+  {n:"Saint-Péray 2023",p:"Johann Michel",pr:130,g:"Marsanne, Roussanne",r:"Rhône",c:"France",cl:"blanc",s:"Blanc — France",pf:"Northern Rhône white with white peach, almond, and waxy richness."},
+  {n:"Mercurey 2023",p:"Jeannin-Naltet",pr:130,g:"Chardonnay",r:"Mercurey, Bourgogne",c:"France",cl:"blanc",s:"Blanc — France",pf:"White Mercurey with stone fruit, hazelnut, and rounded Burgundian generosity."},
+  {n:"Georges 2021",p:"Thillardon",pr:132,g:"Chardonnay",r:"Beaujolais, Bourgogne",c:"France",cl:"blanc",s:"Blanc — France",pf:"Beaujolais Chardonnay with citrus, mineral, and a fresh unoaked purity."},
+  {n:"À l'Ouest 2022",p:"Domaine de l'Enclos",pr:132,g:"Chardonnay",r:"Chablis",c:"France",cl:"blanc",s:"Blanc — France",pf:"Chablis with green apple, chalk, and crystalline mineral freshness."},
+  {n:"Sous le Parc 2022",p:"Jérémy Arnaud",pr:135,g:"Chardonnay",r:"Béru, Chablis",c:"France",cl:"blanc",s:"Blanc — France",pf:"Single-vineyard Chablis from Béru. Flint, citrus, and focused mineral depth."},
+  {n:"La Virada 2021",p:"Camin Larredya",pr:140,g:"Mansengs",r:"Jurançon Sec, Sud-Ouest",c:"France",cl:"blanc",s:"Blanc — France",pf:"Dry Jurançon Mansengs. Exotic fruit, quince, and a taut mineral backbone."},
+  {n:"Jus Rare 2020",p:"Devevey",pr:150,g:"Savagnin",r:"Bourgogne",c:"France",cl:"blanc",s:"Blanc — France",pf:"Rare Burgundian Savagnin with walnut, curry leaf, and gentle oxidative character."},
+  {n:"Vaillon 2023",p:"Christian Moreau",pr:150,g:"Chardonnay",r:"1er Cru Chablis",c:"France",cl:"blanc",s:"Blanc — France",pf:"Premier Cru Chablis. Oyster shell, green apple, steely mineral purity."},
+  {n:"Veine Bleue 2018",p:"Rousset-Martin",pr:160,g:"Savagnin",r:"Jura",c:"France",cl:"blanc",s:"Blanc — France",pf:"Jura Savagnin with walnut, curry, and distinctive oxidative character. Profound."},
+  {n:"JuCha 2020",p:"Zéroine",pr:160,g:"Chardonnay",r:"Côtes du Jura",c:"France",cl:"blanc",s:"Blanc — France",pf:"Jura Chardonnay with yellow fruit, hazelnut, and gentle sous-voile character."},
+  {n:"Sous le Cellier 2021",p:"Fichet",pr:165,g:"Chardonnay",r:"Monthélie, Bourgogne",c:"France",cl:"blanc",s:"Blanc — France",pf:"Monthélie Chardonnay with stone fruit, mineral tension, and Burgundian finesse."},
+  {n:"Iris 2021",p:"Robinot",pr:170,g:"Chenin Blanc",r:"Jasnières, Loire",c:"France",cl:"blanc",s:"Blanc — France",pf:"Cult Loire Chenin from Jasnières. Quince, honey, and mineral intensity."},
+  {n:"Les Vignes Blanches 2022",p:"Cordier",pr:172,g:"Chardonnay",r:"1er Cru Pouilly Fuissé, Bourgogne",c:"France",cl:"blanc",s:"Blanc — France",pf:"Premier Cru Pouilly-Fuissé. Rich, mineral Chardonnay with stone fruit depth."},
+  {n:"Les Cinq Climats 2022",p:"Alain Gras",pr:175,g:"Chardonnay",r:"Saint Romain, Bourgogne",c:"France",cl:"blanc",s:"Blanc — France",pf:"Saint-Romain Chardonnay. Fresh, mineral, with citrus and hazelnut notes."},
+  {n:"Vergelesses 2020",p:"Terres de Velle",pr:175,g:"Chardonnay",r:"1er Cru Savigny, Bourgogne",c:"France",cl:"blanc",s:"Blanc — France",pf:"Premier Cru Savigny white. Elegant Chardonnay with floral and mineral depth."},
+  {n:"De L'avant 2020",p:"Maison Maenad",pr:178,g:"Chardonnay",r:"Jura",c:"France",cl:"blanc",s:"Blanc — France",pf:"Jura Chardonnay with apple, hazelnut, and subtle oxidative complexity."},
+  {n:"Melon à Queue Rouge 2020",p:"Ratte",pr:188,g:"Melon",r:"Arbois, Jura",c:"France",cl:"blanc",s:"Blanc — France",pf:"Rare Jura variety with unique herbal and mineral character. Highly distinctive."},
+  {n:"Auxey-Duresses 2021",p:"Fichet",pr:188,g:"Chardonnay",r:"Bourgogne",c:"France",cl:"blanc",s:"Blanc — France",pf:"Auxey-Duresses Chardonnay. Stone fruit, hazelnut, and classic Burgundian richness."},
+  {n:"Prieur des Noues 2021",p:"Bonnezeaux",pr:190,g:"Chenin",r:"Anjou, Loire",c:"France",cl:"blanc",s:"Blanc — France",pf:"Loire Chenin with honey, quince, and a rich yet balanced palate."},
+  {n:"Pfersigberg 2018",p:"Schueller",pr:200,g:"Riesling",r:"Grand Cru, Alsace",c:"France",cl:"blanc",s:"Blanc — France",pf:"Grand Cru Alsace Riesling. Peach, petrol, and powerful mineral structure."},
+  {n:"Le Secret 2023",p:"Banneret",pr:200,g:"Grenache",r:"Châteauneuf, Rhône",c:"France",cl:"blanc",s:"Blanc — France",pf:"White Châteauneuf-du-Pape. Rich, honeyed, with garrigue and stone fruit."},
+  {n:"Roc d'Anglade Blanc 2022",p:"Roc d'Anglade",pr:200,g:"Chenin",r:"Languedoc",c:"France",cl:"blanc",s:"Blanc — France",pf:"Cult Languedoc white. Chenin-based with mineral depth and Mediterranean character."},
+  {n:"Saint Péray 2022",p:"Clape",pr:200,g:"Marsanne, Roussanne",r:"Rhône",c:"France",cl:"blanc",s:"Blanc — France",pf:"From Cornas royalty. Rich northern Rhône white with peach, almond, and wax."},
+  {n:"La Fussière 2022",p:"Bachelet Monnot",pr:200,g:"Chardonnay",r:"1er Cru Maranges, Bourgogne",c:"France",cl:"blanc",s:"Blanc — France",pf:"Premier Cru Maranges. Precise Chardonnay with mineral tension and elegance."},
+  {n:"Saint Romain 2022",p:"Renaud Boyer",pr:220,g:"Chardonnay",r:"Bourgogne",c:"France",cl:"blanc",s:"Blanc — France",pf:"Saint-Romain Chardonnay with citrus, chalk, and focused mineral freshness."},
+  {n:"Coteaux de Bruno 2019",p:"Clos du Rouge Gorge",pr:220,g:"Maccabeu",r:"Côtes Catalanes, Roussillon",c:"France",cl:"blanc",s:"Blanc — France",pf:"Old-vine Maccabeu from a cult Roussillon estate. Herbal, textured, savory."},
+  {n:"L'Échelier 2022",p:"Roches Neuves",pr:225,g:"Chenin",r:"Saumur, Loire",c:"France",cl:"blanc",s:"Blanc — France",pf:"Biodynamic Saumur Chenin. Quince, mineral intensity, and age-worthy structure."},
+  {n:"Puligny Montrachet 2022",p:"Mélin",pr:225,g:"Chardonnay",r:"Bourgogne",c:"France",cl:"blanc",s:"Blanc — France",pf:"Classic Puligny. White flower, lime blossom, electric minerality. Refined."},
+  {n:"Blanc de Tronquoy 2019",p:"Tronquoy",pr:230,g:"Sauvignon gris",r:"St. Estephe, Bordeaux",c:"France",cl:"blanc",s:"Blanc — France",pf:"White Bordeaux with exotic Sauvignon Gris character. Textured and complex."},
+  {n:"Combe Bazin 2021",p:"Cossard",pr:240,g:"Chardonnay",r:"Saint Romain, Bourgogne",c:"France",cl:"blanc",s:"Blanc — France",pf:"Cossard's Saint-Romain. Precise, mineral Chardonnay with chalky tension."},
+  {n:"Les Quarts 2022",p:"La Soufrandière",pr:250,g:"Chardonnay",r:"Pouilly-Vinzelles, Bourgogne",c:"France",cl:"blanc",s:"Blanc — France",pf:"Biodynamic Pouilly-Vinzelles. Rich mineral Chardonnay with stone fruit depth."},
+  {n:"Les Clos 2022",p:"Christian Moreau",pr:260,g:"Chardonnay",r:"Grand Cru Chablis",c:"France",cl:"blanc",s:"Blanc — France",pf:"Grand Cru Chablis from the most revered vineyard. Power, flint, iodine."},
+  {n:"Savagnin 2020",p:"Bienaimé",pr:260,g:"Savagnin",r:"Arlay, Jura",c:"France",cl:"blanc",s:"Blanc — France",pf:"Jura Savagnin with walnut, curry, and distinctive oxidative depth."},
+  {n:"Clos Béru 2018",p:"Béru",pr:265,g:"Chardonnay",r:"Chablis",c:"France",cl:"blanc",s:"Blanc — France",pf:"Monopole Chablis. Rich, mineral, with extraordinary concentration and length."},
+  {n:"Clos du Meix 2021",p:"Hubert Lamy",pr:285,g:"Chardonnay",r:"Saint Aubin, Bourgogne",c:"France",cl:"blanc",s:"Blanc — France",pf:"Saint-Aubin from a Burgundy master. Precise, mineral, and age-worthy."},
+  {n:"Vaudesir 2022",p:"Louis Michel",pr:288,g:"Chardonnay",r:"Grand Cru Chablis",c:"France",cl:"blanc",s:"Blanc — France",pf:"Grand Cru Chablis with power, citrus, flint, and extraordinary mineral depth."},
+  {n:"Meursault 2021",p:"Fichet",pr:295,g:"Chardonnay",r:"Bourgogne",c:"France",cl:"blanc",s:"Blanc — France",pf:"Classic Meursault. Butter, hazelnut, citrus. Rich with nutty opulent character."},
+  {n:"Puligny Montrachet 2022 (Clos)",p:"Clos du Moulin aux Moines",pr:300,g:"Chardonnay",r:"Bourgogne",c:"France",cl:"blanc",s:"Blanc — France",pf:"Refined Puligny. White flower, lime blossom, chalky electric minerality."},
+  {n:"Les Hautés 2021",p:"Vincent",pr:320,g:"Chardonnay",r:"Auxey-Duresses, Bourgogne",c:"France",cl:"blanc",s:"Blanc — France",pf:"Auxey-Duresses from a top producer. Rich, mineral Burgundian Chardonnay."},
+  {n:"La Rue des Noyers 2018",p:"Déhu",pr:320,g:"Pinot Meunier",r:"Coteaux Champenois",c:"France",cl:"blanc",s:"Blanc — France",pf:"Still Champagne region Pinot Meunier. Rare, vinous, with baked apple complexity."},
+  {n:"Les Argillats 2022",p:"Guyon",pr:330,g:"Pinot Blanc",r:"Nuits-Saint-Georges",c:"France",cl:"blanc",s:"Blanc — France",pf:"Rare Pinot Blanc from Nuits-Saint-Georges. Rich, textured, and distinctive."},
+  {n:"Blanc de Duhart Milon 2022",p:"Duhart Milon",pr:325,g:"Sémillon Sauvignon",r:"Pauillac, Bordeaux",c:"France",cl:"blanc",s:"Blanc — France",pf:"White Pauillac from a classified estate. Elegant, complex, age-worthy."},
+  {n:"En Dresolles 2023",p:"Huber-Verdereau",pr:325,g:"Chardonnay",r:"Meursault, Bourgogne",c:"France",cl:"blanc",s:"Blanc — France",pf:"Meursault with butter, hazelnut, and classic nutty Burgundian richness."},
+  {n:"Les Reuchaux 2022",p:"Renaud Boyer",pr:350,g:"Chardonnay",r:"Bourgogne",c:"France",cl:"blanc",s:"Blanc — France",pf:"Top Burgundy Chardonnay with mineral depth and refined elegance."},
+  {n:"Concis du Champs 2021",p:"Lamy",pr:385,g:"Chardonnay",r:"Bourgogne",c:"France",cl:"blanc",s:"Blanc — France",pf:"Hubert Lamy's Burgundy. Precise, chalky mineral Chardonnay of great depth."},
+  {n:"Clos de l'Arlot Blanc 2022",p:"L'Arlot",pr:400,g:"Chardonnay",r:"1er Cru Nuits Saint Georges, Bourgogne",c:"France",cl:"blanc",s:"Blanc — France",pf:"Premier Cru white from a legendary Nuits estate. Rare and exceptional."},
+  {n:"Aux Croix Rouges 2021",p:"Cossard",pr:420,g:"Chardonnay",r:"Nuits-Saint-Georges, Bourgogne",c:"France",cl:"blanc",s:"Blanc — France",pf:"White Nuits-Saint-Georges. Extremely rare, powerful, and mineral."},
+  {n:"L'Hermitage 2002",p:"Chave",pr:500,g:"Marsanne",r:"Hermitage, Rhône",c:"France",cl:"blanc",s:"Blanc — France",pf:"Legendary aged Hermitage. Honeyed richness, wax, truffle, extraordinary depth."},
+  {n:"L'Hermitage 2014",p:"Chave",pr:500,g:"Marsanne",r:"Hermitage, Rhône",c:"France",cl:"blanc",s:"Blanc — France",pf:"Younger Chave Hermitage. White peach, acacia, granite, immense aging potential."},
+  {n:"Brézé 2018",p:"Clos Rougeard",pr:500,g:"Chenin Blanc",r:"Anjou, Loire",c:"France",cl:"blanc",s:"Blanc — France",pf:"Cult Loire Chenin. Quince, beeswax, laser-like mineral intensity. Extremely rare."},
+  {n:"Cos d'Estournel Blanc 2009",p:"Cos d'Estournel",pr:600,g:"Sauvignon Blanc",r:"Saint-Estèphe, Bordeaux",c:"France",cl:"blanc",s:"Blanc — France",pf:"White Bordeaux from a classified estate. Exotic fruit, oak spice, layered complexity."},
+  {n:"Roero Arneis 2024 (btl)",p:"Tibaldi",pr:80,g:"Arnese",r:"Roero, Piemonte",c:"Italie",cl:"blanc",s:"Blanc — Italie",pf:"Crisp Piedmontese white. White peach, almond, delicate floral notes."},
+  {n:"Tonsur 2023",p:"Pranzegg",pr:88,g:"Muller, Pinot Bianco",r:"Alto Adige",c:"Italie",cl:"blanc",s:"Blanc — Italie",pf:"Alpine blend with citrus, white flower, and cool mineral precision."},
+  {n:"Valtiberia 2023",p:"Sottoilnoce",pr:90,g:"Trebbiano",r:"Emilia-Romagna",c:"Italie",cl:"blanc",s:"Blanc — Italie",pf:"Authentic Trebbiano with green apple, chamomile, and natural character."},
+  {n:"Blatterle 2021",p:"Nusserhof",pr:100,g:"Blatterle",r:"Bolzano, Alto Adige",c:"Italie",cl:"blanc",s:"Blanc — Italie",pf:"Rare indigenous Alto Adige variety. Mineral, herbal, and distinctive."},
+  {n:"Elysium 2022",p:"Pranzegg",pr:105,g:"Pinot Bianco",r:"Alto Adige",c:"Italie",cl:"blanc",s:"Blanc — Italie",pf:"Alpine Pinot Bianco with white flower, citrus, and mineral freshness."},
+  {n:"Aurora 2022",p:"Salvo Foti",pr:120,g:"Carricante",r:"Etna, Sicilia",c:"Italie",cl:"blanc",s:"Blanc — Italie",pf:"Volcanic Etna white. Citrus, ash, thrilling saline minerality from lava soils."},
+  {n:"Bianco 2020",p:"Selvadolce",pr:135,g:"Vermentino",r:"Ligurie",c:"Italie",cl:"blanc",s:"Blanc — Italie",pf:"Ligurian Vermentino with sea breeze, citrus, and Mediterranean herbal notes."},
+  {n:"Santa Marguerita 2021",p:"Occhipinti",pr:155,g:"Grillo",r:"Iblei, Sicilia",c:"Italie",cl:"blanc",s:"Blanc — Italie",pf:"Natural Sicilian Grillo from cult producer. Herbal, savory, rich and wild."},
+  {n:"Trebbiano d'Abruzzo 2020",p:"Valentini",pr:500,g:"Trebbiano Abruzzese",r:"Abruzzo",c:"Italie",cl:"blanc",s:"Blanc — Italie",pf:"Italy's most legendary white. Waxy, honeyed, profound mineral depth. Unicorn wine."},
+  {n:"Vino di Sasso 2024",p:"Sclavos",pr:75,g:"Robola",r:"Céphalonie",c:"Grèce",cl:"blanc",s:"Blanc — Moyen-Orient",pf:"Greek island Robola. Lemon, sea salt, stony mineral-driven palate."},
+  {n:"Kashf 2022 (btl)",p:"El-Sabban",pr:75,g:"Viognier",r:"Mont Liban",c:"Liban",cl:"blanc",s:"Blanc — Moyen-Orient",pf:"Lebanese Viognier with lush apricot, jasmine, and full silky texture."},
+  {n:"Bargylus Blanc 2018 (btl)",p:"Bargylus",pr:115,g:"Sauvignon, Chardonnay",r:"Lattakia",c:"Syrie",cl:"blanc",s:"Blanc — Moyen-Orient",pf:"Syria's most prestigious white. Tropical fruit, flint, cedar from coastal vineyards."},
+  {n:"Costumbres 2022",p:"Voz Baja",pr:95,g:"Viura",r:"Rioja",c:"Espagne",cl:"blanc",s:"Blanc — Espagne",pf:"Traditional Rioja white. Chamomile, lemon, refreshing unoaked purity."},
+  {n:"Univers 2022",p:"Muchada-Léclapart",pr:115,g:"Palomino",r:"Jerez",c:"Espagne",cl:"blanc",s:"Blanc — Espagne",pf:"Unfortified Palomino from Jerez. Saline, chalky, fino-like complexity. Revolutionary."},
+  {n:"Improvisacio 2022",p:"Enric Soler",pr:150,g:"Xarel·lo",r:"Penedès, Catalonia",c:"Espagne",cl:"blanc",s:"Blanc — Espagne",pf:"Catalan Xarel·lo with mineral depth, citrus, and Mediterranean character."},
+  {n:"Elixir 2021",p:"Muchada-Léclapart",pr:152,g:"Moscatel",r:"Jerez",c:"Espagne",cl:"blanc",s:"Blanc — Espagne",pf:"Dry Moscatel from Jerez. Aromatic, floral, with fino-like saline complexity."},
+  {n:"Nun 2022",p:"Enric Soler",pr:245,g:"Xarel·lo",r:"Penedès, Catalonia",c:"Espagne",cl:"blanc",s:"Blanc — Espagne",pf:"Grand Cru-level Catalan white. Waxy, mineral, extraordinary concentration."},
+  {n:"Berg 2023",p:"Lesom",pr:95,g:"Riesling",r:"Mosel",c:"Allemagne",cl:"blanc",s:"Blanc — Nord",pf:"Mosel Riesling. Racy acidity, lime, petrol, slate-driven minerality. Electrifying."},
+  {n:"Umami 2019",p:"Nestarec",pr:110,g:"Traminer, Riesling",r:"Moravia",c:"Tchéquie",cl:"blanc",s:"Blanc — Nord",pf:"Czech natural wine legend. Rose petal, lychee, savory umami-laden finish."},
+  {n:"Matiere à Discussion 2023",p:"Nival",pr:70,g:"Vidal",r:"Lac St Pierre",c:"Québec",cl:"blanc",s:"Blanc — Canada",pf:"Quebec Vidal. Tropical fruit, pear, honeyed sweetness with fresh acidity."},
+  {n:"Ravel 2022",p:"Lowlife",pr:75,g:"Acadie",r:"Blue Mountains",c:"Ontario",cl:"blanc",s:"Blanc — Canada",pf:"Ontario cool-climate. Crisp, citrusy, mineral edge from Bruce Peninsula."},
+  {n:"Décor 2022",p:"Lieux Communs",pr:80,g:"Frontenac Blanc",r:"Lanoraie",c:"Québec",cl:"blanc",s:"Blanc — Canada",pf:"Quebec Frontenac Blanc. Fresh, aromatic, with local terroir expression."},
+  {n:"Chardonnay 2022",p:"Trail Estate",pr:82,g:"Chardonnay",r:"PEC",c:"Ontario",cl:"blanc",s:"Blanc — Canada",pf:"Prince Edward County Chardonnay. Clean, mineral, cool-climate elegance."},
+  {n:"Nuance de Gris 2023",p:"Pinard et Filles",pr:85,g:"Frontenac Gris",r:"Magog",c:"Québec",cl:"blanc",s:"Blanc — Canada",pf:"Quebec Frontenac Gris. Aromatic, fresh, with distinctive hybrid character."},
+  {n:"Blanc de Mémoire 2021",p:"Nival",pr:85,g:"Pinot",r:"Lac St Pierre",c:"Québec",cl:"blanc",s:"Blanc — Canada",pf:"Quebec Pinot white. Delicate, mineral, and surprisingly refined."},
+  {n:"Calvaire 2021",p:"Pinard et Filles",pr:95,g:"Riesling",r:"Magog",c:"Québec",cl:"blanc",s:"Blanc — Canada",pf:"Quebec Riesling. Green apple, lime, mineral purity rivaling European examples."},
+  {n:"Alè 2022",p:"Conestabile della Staffa",pr:66,g:"Malvasia",r:"Umbria",c:"Italie",cl:"orange",s:"Orange",pf:"Skin-contact Umbrian Malvasia. Apricot, herb tea, gentle tannic grip."},
+  {n:"Trebbiano Orange 2022 (btl)",p:"Casale",pr:88,g:"Trebbiano",r:"Toscana",c:"Italie",cl:"orange",s:"Orange",pf:"Extended maceration Trebbiano. Dried fruit, chamomile, nutty oxidative complexity."},
+  {n:"Gewurtz 2020",p:"In der Eben",pr:90,g:"Gewurztraminer",r:"Alto Adige",c:"Italie",cl:"orange",s:"Orange",pf:"Skin-contact Gewurztraminer. Lychee, rose, and tannic herbal complexity."},
+  {n:"Oxymoron 2022",p:"Mas Guallar",pr:95,g:"Muscat à Petit Grain",r:"Roussillon",c:"France",cl:"orange",s:"Orange",pf:"Skin-contact Muscat. Floral, aromatic, with tannic grip and herbal depth."},
+  {n:"Résilience d'en Paillol 2023",p:"Mas Guallar",pr:98,g:"Macabeu",r:"Maury, Roussillon",c:"France",cl:"orange",s:"Orange",pf:"Roussillon Macabeu. Herbal, textured, with Mediterranean garrigue character."},
+  {n:"BS 2020",p:"Partida Creus",pr:100,g:"Sumoll Blanco",r:"Catalonia",c:"Espagne",cl:"orange",s:"Orange",pf:"Cult Catalan skin-contact. Wild, herbal, untamed natural character."},
+  {n:"Doma 2021",p:"Naboso",pr:105,g:"Welschriesling",r:"Slovénie",c:"Slovénie",cl:"orange",s:"Orange",pf:"Slovenian skin-contact Welschriesling. Herbal, honeyed, with tannic structure."},
+  {n:"Iastemma 2021",p:"Canlibero",pr:105,g:"Falenghina",r:"Campania",c:"Italie",cl:"orange",s:"Orange",pf:"Campanian skin-contact Falenghina. Herbal, honeyed, Mediterranean warmth."},
+  {n:"A Chaira 2021",p:"La Perdida",pr:105,g:"Dona Branca",r:"Galicia",c:"Espagne",cl:"orange",s:"Orange",pf:"Galician skin-contact. Wild, mineral, with Atlantic-influenced freshness."},
+  {n:"Obeideh 2022",p:"Sept",pr:105,g:"Obeideh",r:"Batroun",c:"Liban",cl:"orange",s:"Orange",pf:"Lebanese skin-contact from indigenous Obeideh. Herbal, honeyed, Middle Eastern character."},
+  {n:"Matassa Blanc 2022",p:"Matassa",pr:115,g:"Maccabeu",r:"Roussillon",c:"France",cl:"orange",s:"Orange",pf:"Cult Roussillon Maccabeu. Complex, dried apricot, garrigue, textured savory palate."},
+  {n:"Thirst Trap 2021",p:"Stagiaire",pr:115,g:"Sauvignon Blanc",r:"Californie",c:"États-Unis",cl:"orange",s:"Orange",pf:"Californian skin-contact Sauvignon. Wild, funky, with herbal and citrus character."},
+  {n:"Vinu Jancu 2019",p:"La Garagista",pr:115,g:"La Crescent",r:"Vermont",c:"États-Unis",cl:"orange",s:"Orange",pf:"Vermont skin-contact hybrid. Wild, honeyed, with unique New England terroir."},
+  {n:"Bianco 2020 (Halara)",p:"Halara",pr:130,g:"Catarratto",r:"Marsala, Sicilia",c:"Italie",cl:"orange",s:"Orange",pf:"Sicilian skin-contact Catarratto. Herbal, saline, with volcanic mineral character."},
+  {n:"Ansoncaca 2020",p:"Carfagna",pr:150,g:"Ansonica",r:"Giglio, Toscana",c:"Italie",cl:"orange",s:"Orange",pf:"Island Tuscan skin-contact. Sea salt, herbs, wild Mediterranean character."},
+  {n:"Scodavacca 2017",p:"Montanar",pr:160,g:"Verduzzo",r:"Friuli-Venezia Giulia",c:"Italie",cl:"orange",s:"Orange",pf:"Friulian Verduzzo with honey, dried fruit, and tannic oxidative depth."},
+  {n:"Pappou 2020",p:"Kalathas",pr:165,g:"Rozaki",r:"Tinos",c:"Grèce",cl:"orange",s:"Orange",pf:"Greek island table grape wine. Wildly unique — honey, herbs, sea breeze."},
+  {n:"Sons Cartoixa Marina 2017",p:"Sicus",pr:170,g:"Xarello",r:"Penedès, Catalonia",c:"Espagne",cl:"orange",s:"Orange",pf:"Catalan skin-contact Xarel·lo. Saline, herbal, with Mediterranean depth."},
+  {n:"Celeste 2018",p:"Domaine De L'écu",pr:180,g:"Chardonnay",r:"Muscadet, Loire",c:"France",cl:"orange",s:"Orange",pf:"Loire skin-contact Chardonnay. Honeyed, textured, with mineral freshness."},
+  {n:"Bardette 2022",p:"Labet",pr:200,g:"Savagnin",r:"Rotalier, Jura",c:"France",cl:"orange",s:"Orange",pf:"Jura Savagnin. Walnut, curry leaf, distinctive oxidative character. Profound."},
+  {n:"Terre 2022",p:"Roches Neuves",pr:200,g:"Chenin Blanc",r:"Saumur, Loire",c:"France",cl:"orange",s:"Orange",pf:"Skin-contact Chenin from legendary Saumur estate. Quince, beeswax, tannic grip."},
+  {n:"Côt Lectif 2023",p:"Quastana",pr:70,g:"Côt",r:"Touraine, Loire",c:"France",cl:"rouge",s:"Rouge — France",pf:"Loire Malbec. Dark plum, violet, juicy crunchy freshness. Natural glou-glou."},
+  {n:"Château Tire Pé 2022",p:"Château Tire Pé",pr:75,g:"Merlot",r:"Entre-Deux-Mers, Bordeaux",c:"France",cl:"rouge",s:"Rouge — France",pf:"Approachable Bordeaux Merlot. Ripe plum, soft tannins, smooth finish."},
+  {n:"Les Sources 2021",p:"Jean Faux",pr:80,g:"Merlot, Cabernet",r:"Bordeaux Supérieur",c:"France",cl:"rouge",s:"Rouge — France",pf:"Bordeaux Supérieur blend. Dark fruit, herbs, and structured elegance."},
+  {n:"Mise en Bouche 2023 (btl)",p:"Darnaud",pr:90,g:"Syrah",r:"Crozes-Hermitage, Rhône",c:"France",cl:"rouge",s:"Rouge — France",pf:"Northern Rhône Syrah. Cracked pepper, blackberry, smoked meat. Savory."},
+  {n:"La Vouivre 2023",p:"Drach",pr:95,g:"Pinot Noir, Gamay",r:"Lorraine",c:"France",cl:"rouge",s:"Rouge — France",pf:"Lorraine blend. Light, fresh, with cherry and herbal character."},
+  {n:"La Combe des Cerisiers 2023",p:"L'Atelier Vigneron",pr:100,g:"Syrah",r:"Roussillon",c:"France",cl:"rouge",s:"Rouge — France",pf:"Roussillon Syrah with dark fruit, garrigue, and Mediterranean spice."},
+  {n:"French Disko 2022",p:"Matassa",pr:108,g:"Cinsault",r:"Roussillon",c:"France",cl:"rouge",s:"Rouge — France",pf:"Cult Cinsault from Matassa. Light, electric, with cherry and herbal freshness."},
+  {n:"Bourgogne Rouge 2022",p:"Fichet",pr:110,g:"Pinot Noir",r:"Bourgogne",c:"France",cl:"rouge",s:"Rouge — France",pf:"Pure Burgundy Pinot. Red cherry, earth, silky tannins. Elegant classic."},
+  {n:"Trousseau des Corvées 2022",p:"Domaine de la Tournelle",pr:110,g:"Trousseau",r:"Arbois, Jura",c:"France",cl:"rouge",s:"Rouge — France",pf:"Jura Trousseau with cranberry, white pepper, and ethereal delicacy."},
+  {n:"Jeunes Vignes 2023",p:"Rouge Gorge",pr:112,g:"Grenache",r:"Roussillon",c:"France",cl:"rouge",s:"Rouge — France",pf:"Young-vine Grenache. Fresh, fruity, with Mediterranean herbs."},
+  {n:"Foun del Bosc 2022",p:"Mas Guallar",pr:115,g:"Carignan",r:"Maury, Roussillon",c:"France",cl:"rouge",s:"Rouge — France",pf:"Old-vine Carignan from Maury. Dark, intense, with garrigue and spice."},
+  {n:"Inopia Rouge 2021",p:"Saouma",pr:115,g:"Grenache",r:"Côtes du Rhône",c:"France",cl:"rouge",s:"Rouge — France",pf:"Southern Rhône Grenache. Red fruit, garrigue, and sun-baked warmth."},
+  {n:"Trousseau 2022",p:"Touraize",pr:120,g:"Trousseau",r:"Arbois, Jura",c:"France",cl:"rouge",s:"Rouge — France",pf:"Jura Trousseau. Cranberry, white pepper, translucent ethereal delicacy."},
+  {n:"Vin des Amis 2023",p:"Clape",pr:145,g:"Syrah",r:"Rhône (Cornas)",c:"France",cl:"rouge",s:"Rouge — France",pf:"From Cornas royalty. Black olive, iron, violets. A gentler Clape expression."},
+  {n:"Château Pitray 2020",p:"Château Pitray",pr:145,g:"Merlot",r:"Castillon Côtes de Bordeaux",c:"France",cl:"rouge",s:"Rouge — France",pf:"Right Bank Bordeaux. Rich Merlot with plum, earth, and structured tannins."},
+  {n:"Saint-Joseph 2023",p:"Johann Michel",pr:145,g:"Syrah",r:"Saint Joseph, Rhône",c:"France",cl:"rouge",s:"Rouge — France",pf:"Northern Rhône Saint-Joseph. Pepper, dark fruit, and mineral precision."},
+  {n:"Marginale 2022",p:"Roches Neuves",pr:145,g:"Cabernet Franc",r:"Saumur-Champigny, Loire",c:"France",cl:"rouge",s:"Rouge — France",pf:"Biodynamic Loire Cab Franc. Violet, graphite, precise mineral drive."},
+  {n:"Clos des Grands Voyens 2022",p:"Jeannin-Naltet",pr:160,g:"Pinot Noir",r:"1er Cru Mercurey, Bourgogne",c:"France",cl:"rouge",s:"Rouge — France",pf:"Premier Cru Mercurey. Structured Pinot with cherry, earth, and finesse."},
+  {n:"La Dardouille 2022",p:"Darnaud",pr:162,g:"Syrah",r:"Saint Joseph, Rhône",c:"France",cl:"rouge",s:"Rouge — France",pf:"Saint-Joseph Syrah. Dark fruit, smoke, and northern Rhône minerality."},
+  {n:"Ploussard 2018",p:"Overnoy",pr:175,g:"Poulsard",r:"Arbois-Pupillin, Jura",c:"France",cl:"rouge",s:"Rouge — France",pf:"Holy grail of Jura. Translucent, ethereal — rose hip, tea, haunting complexity."},
+  {n:"Pinot Noir 2022",p:"Schueller",pr:180,g:"Pinot Noir",r:"Alsace",c:"France",cl:"rouge",s:"Rouge — France",pf:"Alsatian Pinot Noir with red cherry, spice, and elegant structure."},
+  {n:"Domaine du Banneret 2022",p:"Banneret",pr:185,g:"Grenache",r:"Châteauneuf-du-Pape, Rhône",c:"France",cl:"rouge",s:"Rouge — France",pf:"Classic Châteauneuf. Ripe red fruit, garrigue, lavender, sun-baked warmth."},
+  {n:"Roc d'Anglade Rouge 2022",p:"Roc d'Anglade",pr:200,g:"Grenache",r:"Languedoc",c:"France",cl:"rouge",s:"Rouge — France",pf:"Cult Languedoc estate. Garrigue, dark fruit, Mediterranean spice, incredible depth."},
+  {n:"Pommard 2016",p:"Giroud",pr:220,g:"Pinot Noir",r:"Bourgogne",c:"France",cl:"rouge",s:"Rouge — France",pf:"Aged Pommard. Rich, structured Pinot with dark cherry and earth."},
+  {n:"Outre Terre 2022",p:"Roches Neuves",pr:220,g:"Cabernet Franc",r:"Saumur Champigny, Loire",c:"France",cl:"rouge",s:"Rouge — France",pf:"Biodynamic Cab Franc. Deep, mineral, with violet and graphite complexity."},
+  {n:"La Tourtine 2022",p:"Tempier",pr:220,g:"Mourvèdre",r:"Bandol, Provence",c:"France",cl:"rouge",s:"Rouge — France",pf:"Bandol Mourvèdre from a legendary estate. Dark, wild, meaty, and age-worthy."},
+  {n:"Auguste 2022",p:"Clos des Vignes du Maynes",pr:230,g:"Pinot Fin",r:"Mâconnais, Bourgogne",c:"France",cl:"rouge",s:"Rouge — France",pf:"Rare Pinot Fin from biodynamic Mâconnais. Elegant, perfumed, distinctive."},
+  {n:"Grande Réserve 2015",p:"Château des Tours",pr:245,g:"Grenache",r:"Côtes du Rhône",c:"France",cl:"rouge",s:"Rouge — France",pf:"Legendary Côtes du Rhône from Rayas family. Deep, complex, age-worthy."},
+  {n:"Chorey-les-Beaune 2022",p:"Guyon",pr:250,g:"Pinot Noir",r:"Bourgogne",c:"France",cl:"rouge",s:"Rouge — France",pf:"Chorey-les-Beaune Pinot. Fresh, elegant, with classic Burgundy charm."},
+  {n:"Vieilles Vignes 2022",p:"Eric Texier",pr:255,g:"Grenache",r:"Châteauneuf-du-Pape",c:"France",cl:"rouge",s:"Rouge — France",pf:"Old-vine Châteauneuf. Concentrated, complex, with garrigue and spice."},
+  {n:"La Charpenterie 2019",p:"Collier",pr:270,g:"Cabernet Franc",r:"Saumur Champigny, Loire",c:"France",cl:"rouge",s:"Rouge — France",pf:"Loire Cab Franc of great depth. Violet, graphite, cassis, and mineral tension."},
+  {n:"Volnay 2021",p:"Devevey",pr:270,g:"Pinot Noir",r:"Bourgogne",c:"France",cl:"rouge",s:"Rouge — France",pf:"Elegant Volnay. Red cherry, violet, silky perfumed palate. Classic finesse."},
+  {n:"Clos Saint Michel 1998",p:"Mousset",pr:300,g:"Grenache",r:"Chateauneuf, Rhône",c:"France",cl:"rouge",s:"Rouge — France",pf:"Aged Châteauneuf with evolved complexity. Leather, earth, and fading fruit."},
+  {n:"Le Passetemps 2021",p:"Vincent",pr:300,g:"Pinot Noir",r:"1er Cru Santenay, Bourgogne",c:"France",cl:"rouge",s:"Rouge — France",pf:"Premier Cru Santenay. Structured Pinot with depth and Burgundian elegance."},
+  {n:"Roc Breïa 2023",p:"Théo Dancer",pr:310,g:"Pinot Noir",r:"Bourgogne",c:"France",cl:"rouge",s:"Rouge — France",pf:"Rising-star Burgundy. Fresh, precise Pinot with mineral clarity."},
+  {n:"Reserva Especial",p:"Roc D'Anglade",pr:315,g:"Carignan, Mourvèdre",r:"Languedoc",c:"France",cl:"rouge",s:"Rouge — France",pf:"Cult Languedoc reserve. Dark, complex, with decades of aging potential."},
+  {n:"Genavrières 2013",p:"Domaine Tawse",pr:320,g:"Pinot Noir",r:"1er Cru Morey Saint Denis, Bourgogne",c:"France",cl:"rouge",s:"Rouge — France",pf:"Aged Premier Cru Morey. Evolved Pinot with earth, truffle, and silk."},
+  {n:"Clos des Aigrots 2020",p:"Lafarge",pr:340,g:"Pinot Noir",r:"1er Cru Beaune, Bourgogne",c:"France",cl:"rouge",s:"Rouge — France",pf:"Premier Cru Beaune from a legendary estate. Pure, mineral, age-worthy."},
+  {n:"Camille 2018",p:"Robinot",pr:350,g:"Pineau d'Aunis",r:"Jasnières, Loire",c:"France",cl:"rouge",s:"Rouge — France",pf:"Rare Pineau d'Aunis. White pepper, cranberry, ethereal and hauntingly light."},
+  {n:"Aux Coucherias 2021",p:"Voillot",pr:360,g:"Pinot Noir",r:"1er Cru Beaune, Bourgogne",c:"France",cl:"rouge",s:"Rouge — France",pf:"Premier Cru Beaune. Classic, structured Pinot with cherry and mineral depth."},
+  {n:"Aux Montagnes 2021",p:"Lachaux",pr:375,g:"Pinot Noir",r:"Côtes de Nuits, Bourgogne",c:"France",cl:"rouge",s:"Rouge — France",pf:"Côtes de Nuits Pinot from a rising star. Precise, mineral, and perfumed."},
+  {n:"Clos Saint-Jean 2021",p:"Pillot",pr:375,g:"Pinot Noir",r:"1er Cru Chassagne Montrachet, Bourgogne",c:"France",cl:"rouge",s:"Rouge — France",pf:"Premier Cru Chassagne rouge. Rare, elegant, with cherry and mineral finesse."},
+  {n:"Château Fonsalette 2010",p:"Fonsalette",pr:400,g:"Grenache",r:"Côtes du Rhône",c:"France",cl:"rouge",s:"Rouge — France",pf:"Rayas family Côtes du Rhône. Legendary depth, complexity, and aging potential."},
+  {n:"Haut Bailly 2014",p:"Haut Bailly",pr:400,g:"Cabernets",r:"Pessac-Léognan",c:"France",cl:"rouge",s:"Rouge — France",pf:"Classified Graves. Elegant Cabernet blend with cassis, cedar, and silk."},
+  {n:"Coteau de Tupin 2019",p:"Stephan",pr:400,g:"Syrah",r:"Côte-Rôtie, Rhône",c:"France",cl:"rouge",s:"Rouge — France",pf:"Côte-Rôtie from a cult natural producer. Smoke, iron, and wild intensity."},
+  {n:"Viaillère 2019",p:"Rostaing",pr:410,g:"Syrah",r:"Côte Rotie, Rhône",c:"France",cl:"rouge",s:"Rouge — France",pf:"Côte-Rôtie from Rostaing. Powerful, smoky Syrah with floral elegance."},
+  {n:"Clos des Chênes 2019",p:"Lafarge",pr:420,g:"Pinot Noir",r:"1er Cru Volnay, Bourgogne",c:"France",cl:"rouge",s:"Rouge — France",pf:"Premier Cru Volnay from a legend. Pure, perfumed, with mineral depth."},
+  {n:"Tres Girard 2021",p:"Cécile Tremblay",pr:430,g:"Pinot Noir",r:"1er Cru Morey Saint Denis, Bourgogne",c:"France",cl:"rouge",s:"Rouge — France",pf:"Rare cult Burgundy. Perfumed, mineral, with extraordinary precision."},
+  {n:"Chaillot 2017",p:"Thierry Allemand",pr:440,g:"Syrah",r:"Cornas, Rhône",c:"France",cl:"rouge",s:"Rouge — France",pf:"Cult Cornas. Dark, wild, blackberry, granite, feral intensity. Monumental."},
+  {n:"Ariosa 2014",p:"Saouma",pr:450,g:"Grenache",r:"Châteauneuf du Pape",c:"France",cl:"rouge",s:"Rouge — France",pf:"Aged Châteauneuf from Saouma. Deep, complex, with evolved garrigue and spice."},
+  {n:"Hermitage 2022",p:"Darnaud",pr:450,g:"Syrah",r:"Hermitage, Rhône",c:"France",cl:"rouge",s:"Rouge — France",pf:"Grand Hermitage Syrah. Black fruit, smoke, leather, powerful tannic frame."},
+  {n:"Suchots 2021",p:"Lamarche",pr:450,g:"Pinot Noir",r:"1er Cru Vosne Romanée, Bourgogne",c:"France",cl:"rouge",s:"Rouge — France",pf:"Premier Cru Vosne-Romanée. Silk, roses, and profound Burgundian depth."},
+  {n:"Les Poyeux 2018",p:"Clos Rougeard",pr:450,g:"Cabernet Franc",r:"Saumur Champigny, Loire",c:"France",cl:"rouge",s:"Rouge — France",pf:"Legendary Loire Cab Franc. Violets, graphite, cassis, silk texture. Rare."},
+  {n:"Le Bourg 2018",p:"Clos Rougeard",pr:500,g:"Cabernet Franc",r:"Saumur Champigny, Loire",c:"France",cl:"rouge",s:"Rouge — France",pf:"Top cuvée from Clos Rougeard. Profound, mineral, structured Cab Franc."},
+  {n:"Roc des Cambes 2010",p:"Roc des Cambes",pr:500,g:"Merlot, Cabernet Sauvignon",r:"Cotes de Bourg, Bordeaux",c:"France",cl:"rouge",s:"Rouge — France",pf:"Cult Right Bank Bordeaux. Dark fruit, earth, and remarkable aging potential."},
+  {n:"Clos de Vougeot 2022",p:"Lamarche",pr:600,g:"Pinot Noir",r:"Grand Cru Bourgogne",c:"France",cl:"rouge",s:"Rouge — France",pf:"Grand Cru Burgundy. Dark cherry, earth, spice. Powerful yet refined."},
+  {n:"Echezeaux 2021",p:"Lamarche",pr:600,g:"Pinot Noir",r:"Grand Cru Bourgogne",c:"France",cl:"rouge",s:"Rouge — France",pf:"Grand Cru Echezeaux. Perfumed, complex, with extraordinary Burgundian depth."},
+  {n:"Tertre Roteboeuf 2017",p:"Tertre Roteboeuf",pr:820,g:"Merlot, Cabernet Franc",r:"Saint Emilion, Bordeaux",c:"France",cl:"rouge",s:"Rouge — France",pf:"Cult Saint-Emilion. Rich, exotic, with remarkable concentration and length."},
+  {n:"Cos d'Estournel Rouge 2000",p:"Cos d'Estournel",pr:850,g:"Cabernet",r:"Saint-Estèphe, Bordeaux",c:"France",cl:"rouge",s:"Rouge — France",pf:"Classified Bordeaux at 25 years. Cedar, leather, tobacco. Majestic maturity."},
+  {n:"Grands Echezeaux 2019",p:"Lucien le Moine",pr:900,g:"Pinot Noir",r:"Grand Cru, Bourgogne",c:"France",cl:"rouge",s:"Rouge — France",pf:"Grand Cru Burgundy. Extraordinarily perfumed, deep, and silky. Rare."},
+  {n:"Clos De La Roche VV 2017",p:"Ponsot",pr:900,g:"Pinot Noir",r:"Grand Cru, Bourgogne",c:"France",cl:"rouge",s:"Rouge — France",pf:"Legendary Ponsot Grand Cru. Power, depth, and timeless Burgundian elegance."},
+  {n:"Château Margaux 2000",p:"Château Margaux",pr:2000,g:"Cabernet",r:"Margaux, Bordeaux",c:"France",cl:"rouge",s:"Rouge — France",pf:"Legendary First Growth. Cassis, violets, graphite, velvet tannins."},
+  {n:"Château Lafite-Rothschild 2000",p:"Château Lafite",pr:2200,g:"Cabernet",r:"Pauillac, Bordeaux",c:"France",cl:"rouge",s:"Rouge — France",pf:"First Growth at its pinnacle. Cedar, lead pencil, blackcurrant, eternal finish."},
+  {n:"Logistilla 2022",p:"Luna Gaia",pr:66,g:"Nerello Mascalese",r:"Sicilia",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Volcanic Sicilian red. Cherry, blood orange, ashy mineral. Light and electric."},
+  {n:"Scuderia 2022",p:"Conestabile della Staffa",pr:70,g:"Sangiovese",r:"Umbria",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Umbrian Sangiovese with cherry, herbs, and gentle earthy character."},
+  {n:"Temprano 2022",p:"Dos Tierras",pr:75,g:"Tempranillo",r:"Sicilia",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Tempranillo in Sicily. Dark cherry, Mediterranean herbs, and soft tannins."},
+  {n:"Dolcetto d'Alba 2022 (btl)",p:"Veglio",pr:78,g:"Dolcetto",r:"Piemonte",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Classic Dolcetto. Dark cherry, violet, bitter almond. Soft tannins."},
+  {n:"Donesco 2020",p:"Pacina",pr:80,g:"Sangiovese",r:"Toscana",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Natural Tuscan Sangiovese. Cherry, herbs, and rustic, authentic character."},
+  {n:"Verduno Pelaverga 2023",p:"Rivera",pr:80,g:"Pelaverga",r:"Piemonte",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Rare Piedmontese grape. Light, spicy, with white pepper and cherry."},
+  {n:"Sankt Anna 2020",p:"In der Eben",pr:85,g:"Schiava",r:"Alto Adige",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Alto Adige Schiava. Light red with alpine strawberry and herbal freshness."},
+  {n:"Limonte 2023",p:"Braida",pr:85,g:"Grignolino",r:"Piemonte",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Piedmontese Grignolino. Pale, tannic, with raspberry and orange peel."},
+  {n:"Chianti Classico 2020",p:"Il Palagio di Panzano",pr:88,g:"Sangiovese",r:"Toscane",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Chianti Classico with sour cherry, herbs, and classic Tuscan acidity."},
+  {n:"Arlechino 2022",p:"Orsi",pr:88,g:"Sept Cépages",r:"Emilia-Romagna",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Seven-grape Emilian blend. Playful, fruity, with rustic natural charm."},
+  {n:"Chianti Classico 2021",p:"Valdellecorti",pr:90,g:"Sangiovese",r:"Greve, Toscane",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Authentic Chianti from Greve. Sour cherry, dried herb, racy acidity."},
+  {n:"Serpullo 2019",p:"Fongoli",pr:110,g:"Sangiovese",r:"Montefalco, Umbria",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Umbrian Sangiovese with dark fruit, earth, and structured tannins."},
+  {n:"Bramaterra 2021",p:"Crus",pr:115,g:"Nebbiolo",r:"Alto Piemonte",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Northern Piedmont Nebbiolo. Wild berry, alpine herbs, perfumed lightness."},
+  {n:"Barbaresco 2021",p:"Morro Gabriele",pr:145,g:"Nebbiolo",r:"Barbaresco, Piemonte",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Elegant Barbaresco. Rose, tar, red cherry, fine-grained tannins."},
+  {n:"Rosso Se 2021",p:"Selvadolce",pr:155,g:"Rossese",r:"Liguria",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Ligurian Rossese. Light, herbal, with sea-breeze freshness."},
+  {n:"Le Trame 2021",p:"Le Boncie",pr:190,g:"Sangiovese",r:"Toscane",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Tuscan Sangiovese of great depth. Cherry, iron, mineral, age-worthy."},
+  {n:"Barolo Monvigliero 2019",p:"Rivera",pr:200,g:"Nebbiolo",r:"Verduno, Barolo",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Grand cru Barolo from sandy soils. Floral, perfumed, rose petal, truffle."},
+  {n:"Cantunera 1975",p:"Salemmi",pr:200,g:"Nero d'Avola",r:"Sicilia",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"50-year-old Sicilian treasure. Evolved, complex, with dried fruit and leather."},
+  {n:"Amarone 2015",p:"Secondo Marco",pr:210,g:"Corvina",r:"Valpolicella, Veneto",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Amarone with dried cherry, chocolate, and rich concentrated fruit."},
+  {n:"Brunello di Montalcino 2019",p:"Voliero",pr:215,g:"Sangiovese",r:"Toscana",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Brunello with dark cherry, leather, herbs. Structured and authentic."},
+  {n:"Brunello di Montalcino 2018",p:"San Polino",pr:230,g:"Sangiovese",r:"Toscana",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Biodynamic Brunello. Elegant, mineral, with cherry and earth."},
+  {n:"Barolo Villero 2020",p:"Fenocchio",pr:260,g:"Nebbiolo",r:"Castiglione Falletto",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Barolo from Villero cru. Powerful, tannic, with rose and tar."},
+  {n:"La Vigna delle Bambole 2016",p:"Il Palagio di Panzano",pr:280,g:"Sangiovese",r:"Gran Selezione Chianti Classico",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Top Chianti Gran Selezione. Concentrated, complex, age-worthy Sangiovese."},
+  {n:"Brunello di Montalcino 2019 (Sesti)",p:"Sesti",pr:290,g:"Sangiovese",r:"Toscana",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Biodynamic Brunello. Dark cherry, leather, dried herb. Deeply authentic."},
+  {n:"Barolo Cannubi 2019",p:"Fenocchio",pr:290,g:"Nebbiolo",r:"Barolo",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Barolo from legendary Cannubi vineyard. Perfumed, complex, age-worthy."},
+  {n:"Barolo Ginestra 2019",p:"Diego Conterno",pr:290,g:"Nebbiolo",r:"Monforte d'Alba",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Ginestra cru Barolo. Powerful, structured, with rose and truffle."},
+  {n:"Brunello Santa Maria 2019",p:"Colleoni",pr:290,g:"Sangiovese",r:"Brunello di Montalcino",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Single-vineyard Brunello. Concentrated, mineral, with cherry and earth."},
+  {n:"Brunello di Montalcino 2019 (Sesti 2)",p:"Sesti",pr:315,g:"Sangiovese",r:"Brunello di Montalcino",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Reserve-level Brunello. Deep, complex, structured for long aging."},
+  {n:"Tre Stelle 2020",p:"Cascina Delle Rose",pr:315,g:"Nebbiolo",r:"Barbaresco",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Barbaresco with rose, tar, and fine-grained Nebbiolo elegance."},
+  {n:"Brunello di Montalcino 2019 (Ucceliera)",p:"Ucceliera",pr:340,g:"Sangiovese",r:"Brunello di Montalcino",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Powerful Brunello. Dark fruit, leather, concentrated and structured."},
+  {n:"Barolo Brunate 2019",p:"Rinaldi",pr:350,g:"Nebbiolo",r:"La Morra, Barolo",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Traditional Barolo from Brunate. Tar, roses, ethereal Nebbiolo elegance."},
+  {n:"Monte dal Ora 2015",p:"La Stropa",pr:350,g:"Corvina",r:"Amarone della Valpolicella, Veneto",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Natural Amarone. Rich, complex, with dried fruit and mineral depth."},
+  {n:"Phenomena 2018",p:"Sesti",pr:400,g:"Sangiovese",r:"Brunello di Montalcino",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Top cuvée Brunello. Extraordinary depth, concentration, and aging potential."},
+  {n:"Barolo Piè Rupestris 2019",p:"Cappellano",pr:430,g:"Nebbiolo",r:"Serralunga d'Alba",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Cult Cappellano Barolo. Powerful, tannic, with immense aging potential."},
+  {n:"Rocche dell Annunziata 2017",p:"Mauro Veglio",pr:430,g:"Nebbiolo",r:"La Morra",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"La Morra cru Barolo. Perfumed, elegant, with rose and truffle."},
+  {n:"Barolo 2019",p:"Bartolo Mascarello",pr:450,g:"Nebbiolo",r:"Barolo",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Traditional Barolo legend. Tar, roses, timeless ethereal elegance."},
+  {n:"Barolo Riserva 2016",p:"Vietti",pr:450,g:"Nebbiolo",r:"Barolo",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Reserve Barolo from Vietti. Powerful, structured, built for decades."},
+  {n:"Magma 2019",p:"Cornelissen",pr:575,g:"Nerello Mascalese",r:"Etna, Sicilia",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Cult volcanic wine. Unfiltered, wild, ash, iron, primal raw intensity."},
+  {n:"Barolo Piè Franco 2019",p:"Cappellano",pr:650,g:"Nebbiolo",r:"Serralunga d'Alba, Piemonte",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Pre-phylloxera Barolo. Extraordinary rarity, depth, and ethereal complexity."},
+  {n:"Asili Riserva 2014",p:"Giacosa",pr:800,g:"Nebbiolo",r:"Barbaresco, Piemonte",c:"Italie",cl:"rouge",s:"Rouge — Italie",pf:"Red label Giacosa. Among Italy's greatest. Rose, tar, truffle, immortal."},
+  {n:"Ayehoros 2022 (btl)",p:"Dalamara",pr:75,g:"Xinomavro, Merlot",r:"Naoussa",c:"Grèce",cl:"rouge",s:"Rouge — Moyen-Orient",pf:"Greek blend. Xinomavro tannic bite, Merlot fruit. Earthy complexity."},
+  {n:"Limnio 2022",p:"Aslanis",pr:80,g:"Limnio",r:"Thessaloniki",c:"Grèce",cl:"rouge",s:"Rouge — Moyen-Orient",pf:"Ancient Greek grape Limnio. Herbal, earthy, with unique Mediterranean character."},
+  {n:"Wajd 2022",p:"El-Sabban",pr:80,g:"Pinot Noir",r:"Mont Liban",c:"Liban",cl:"rouge",s:"Rouge — Moyen-Orient",pf:"Lebanese Pinot Noir. Elegant red fruit, spice, cool-climate delicacy."},
+  {n:"Heritage 2015",p:"Château Cana",pr:85,g:"Grenache, Cabernet",r:"Mont Liban",c:"Liban",cl:"rouge",s:"Rouge — Moyen-Orient",pf:"Aged Lebanese blend. Garrigue, dark fruit, cedar. Rich and warming."},
+  {n:"Bargylus Rouge 2017 (btl)",p:"Bargylus",pr:145,g:"Syrah, Cabernet",r:"Lattakia",c:"Syrie",cl:"rouge",s:"Rouge — Moyen-Orient",pf:"Syria's iconic red. Dark fruit, leather, garrigue. Testament to resilience."},
+  {n:"Amaltea 2021",p:"Loxarel",pr:75,g:"Merlot",r:"Penedès, Catalonia",c:"Espagne",cl:"rouge",s:"Rouge — Espagne",pf:"Organic Catalan Merlot. Plum, Mediterranean herbs, soft and approachable."},
+  {n:"Palhete 2019",p:"Vale da Capucha",pr:80,g:"Castelinho, Arinto",r:"Torres Vedras",c:"Portugal",cl:"rouge",s:"Rouge — Espagne",pf:"Portuguese field blend. Fresh, Atlantic-influenced, with herbal character."},
+  {n:"Tutti Frutti 2021",p:"Viuva Gomes",pr:92,g:"Ramisco, Malvasia",r:"Colares",c:"Portugal",cl:"rouge",s:"Rouge — Espagne",pf:"Rare Colares from ungrafted vines. Sea salt, dark berry, ancient wild character."},
+  {n:"Emma 2020",p:"Vega Aixala",pr:95,g:"Carinyena",r:"Tarragona, Catalonia",c:"Espagne",cl:"rouge",s:"Rouge — Espagne",pf:"Catalan Carignan with dark fruit, herbs, and Mediterranean depth."},
+  {n:"BB 2020",p:"Partida Creus",pr:100,g:"Bobal",r:"Penedès, Catalonia",c:"Espagne",cl:"rouge",s:"Rouge — Espagne",pf:"Natural Bobal. Dark fruit, earth, untamed compelling rusticity."},
+  {n:"Finca Los Quemados 2022",p:"Goyo Garcia Viadero",pr:110,g:"Tempranillo",r:"Ribeira del Duero",c:"Espagne",cl:"rouge",s:"Rouge — Espagne",pf:"Ribera del Duero Tempranillo. Dark fruit, earth, and structured elegance."},
+  {n:"Os Granitos 2021",p:"Madeira",pr:220,g:"Jaen",r:"Dão",c:"Portugal",cl:"rouge",s:"Rouge — Espagne",pf:"Granite-grown Dão red. Black fruit, violet, stony mineral backbone."},
+  {n:"Un de Ces Quatres 2023",p:"Nival",pr:70,g:"Gamaret",r:"Lac Saint Pierre",c:"Québec",cl:"rouge",s:"Rouge — Canada",pf:"Quebec Gamaret. Dark cherry, pepper, fresh Northern-climate vibrancy."},
+  {n:"Frangin 2023",p:"Pinard et Filles",pr:75,g:"Marquette",r:"Lanoraie",c:"Québec",cl:"rouge",s:"Rouge — Canada",pf:"Hybrid Marquette. Wild berry, smoke, rugged Quebec character."},
+  {n:"Barbotine 2022",p:"Club de Jus",pr:75,g:"Cabernet Franc, Riesling",r:"Creemore Hills",c:"Ontario",cl:"rouge",s:"Rouge — Canada",pf:"Ontario Cab Franc-Riesling blend. Unique, fresh, with herbal complexity."},
+  {n:"Cap à l'Est 2023",p:"Pinard et Filles",pr:88,g:"Assemblage Hybrides",r:"Magog",c:"Québec",cl:"rouge",s:"Rouge — Canada",pf:"Quebec hybrid blend. Dark fruit, herbs, with local terroir expression."},
+  {n:"L'Homère 2020",p:"Pearl Morissette",pr:118,g:"Merlot",r:"Lincoln Lakeshore",c:"Ontario",cl:"rouge",s:"Rouge — Canada",pf:"Niagara Merlot from Canada's finest. Plum, graphite, cool-climate elegance."},
+];
+
+const COCKTAILS_DATA = {
+  "Cocktails": [
+    {name:"Bellini Safran Abricot",price:19,desc:"Prosecco, Qamar al-Din apricot, saffron"},
+    {name:"Cucumber Smash",price:22,desc:"Aupale vodka, rosemary syrup, cucumber, cava"},
+    {name:"Aleppo Gin Sour*",price:23,desc:"Botanist gin, lemon, cilantro, orange blossom, Aleppo pepper"},
+    {name:"Hibiscus Sipper*",price:22,desc:"Hendricks gin, hibiscus, cucumber, sumac"},
+    {name:"Shai Glacé*",price:21,desc:"Crown Royal rye, Darjeeling tea, cardamom, lemon"},
+    {name:"Gingembre Rose*",price:21,desc:"Plantation rum, ginger, cardamom, egg white, Damascus rose"},
+    {name:"Cherry Sour",price:21,desc:"Gibson's 12 whiskey, cherries, tea, egg white, black pepper"},
+    {name:"Qamarita*",price:21,desc:"Reposado tequila, tea, apricot nectar, saffron, Aleppo tajin"},
+    {name:"Martini Méditerranéen",price:23,desc:"Romeo gin, fino sherry, orange bitters, olives"},
+    {name:"Sazarak",price:24,desc:"Lustau brandy de Jerez, Lot 40 rye, Peychaud bitters, Arak"},
+    {name:"The East Fashioned",price:25,desc:"Nikka whiskey, Bordiga vermouth, orange blossom, chocolate bitters"},
+    {name:"Cardamome Espresso Martini",price:22,desc:"Ketel One vodka, Cointreau, Kahlua, cardamom, espresso"},
+  ],
+  "Bières & Cidres": [
+    {name:"Almaza",price:11,desc:"Pilsner, 330ml, Lebanon"},
+    {name:"Ghost Farm",price:14,desc:"IPA, 473ml, Montréal, Québec"},
+    {name:"Débuts 2021",price:35,desc:"Apple & Riesling cider, 750ml, Montréal"},
+  ],
+  "Arak": [
+    {name:"Massaya",price:14},{name:"Kefraya",price:13},
+    {name:"Al-Karram",price:14},{name:"Brun",price:12},
+    {name:"Ksarak",price:11},{name:"Ixsir",price:14},
+  ],
+};
+
+const W = WINES_DATA.map(w=>({name:w.n,producer:w.p,price:w.pr,grape:w.g,region:w.r,country:w.c,color:w.cl,section:w.s,profile:w.pf}));
+const SECTIONS = [...new Set(W.map(w=>w.section))];
+const C = {bg:"#0F0E0C",surface:"#1A1916",card:"#222019",border:"#3A362E",gold:"#C4A265",cream:"#E8DCC8",text:"#C5BBA8",muted:"#8A8070",white:"#F5F0E6",aiBg:"#1E1D1A",aiBdr:"#4A4535"};
+const FLAGS={"France":"🇫🇷","Italie":"🇮🇹","Espagne":"🇪🇸","Allemagne":"🇩🇪","Grèce":"🇬🇷","Liban":"🇱🇧","Syrie":"🇸🇾","Arménie":"🇦🇲","Autriche":"🇦🇹","Slovénie":"🇸🇮","Tchéquie":"🇨🇿","Portugal":"🇵🇹","Québec":"🏔️","Ontario":"🍁","États-Unis":"🇺🇸"};
+const DOTS={blanc:"#D4C98A",rouge:"#8B3A3A",rosé:"#C4787A",orange:"#C49A5A",bulles:"#A8B8A0"};
+const CLABELS={blanc:"Blanc",rouge:"Rouge",rosé:"Rosé",orange:"Orange",bulles:"Bulles"};
+
+function App(){
+  const [tab,setTab]=useState("wine");
+  const [section,setSection]=useState(SECTIONS[0]);
+  const [drinkSec,setDrinkSec]=useState("Cocktails");
+  const [selected,setSelected]=useState(null);
+  const [query,setQuery]=useState("");
+  const [priceFilter,setPriceFilter]=useState("all");
+  const [aiMode,setAiMode]=useState(false);
+  const [aiLoading,setAiLoading]=useState(false);
+  const [aiResp,setAiResp]=useState(null);
+  const [aiWines,setAiWines]=useState([]);
+  const inputRef=useRef(null);
+
+  const FOOD_PAIRINGS={
+    fattouch:{kw:["fattouch","fattoush","fattouche"],traits:["fresh","crisp","acidic","citrus","mineral","light","herbal","saline"],colors:["blanc","rosé","bulles"],avoid:["rouge"],resp:"The fattouch is all about brightness — sumac, pomegranate, fresh herbs, and crispy pita. You want a wine that matches its vibrant acidity and herbal freshness.\n\nThe salad's citrusy, herbaceous character calls for something crisp and mineral."},
+    humus:{kw:["humus","hummus","houmous"],traits:["round","textured","mineral","citrus","fresh"],colors:["blanc","orange"],resp:"Our humus is silky with tahini and garlic. A textured white or skin-contact wine mirrors its creamy character while acidity cuts through beautifully."},
+    kibbeh:{kw:["kibbeh","kibbe","kibbé","tartare","nayé"],traits:["earthy","spice","medium","savory","pepper"],colors:["rouge","rosé"],resp:"The kibbeh nayé is delicate lamb tartare with bulgur and mint — it needs a wine that respects its subtlety without overwhelming."},
+    kebab:{kw:["kebab","kabab","alep kebab"],traits:["bold","smoky","spice","dark fruit","tannin","garrigue"],colors:["rouge"],resp:"The Kebab d'Alep brings smoky char, seven spices, and pine nuts. You need a red with body and spice to match those bold flavors."},
+    agneau:{kw:["agneau","lamb","carré","rack","jarret","shank"],traits:["bold","tannin","dark fruit","spice","garrigue","earthy","full"],colors:["rouge"],resp:"Lamb at Damas is all about warming spices, pomegranate molasses, and char. A wine with structure and aromatic depth is your best companion."},
+    poisson:{kw:["poisson","fish","bar","bass","daurade","bream","samke","moujaddara","sea bass"],traits:["fresh","mineral","citrus","saline","light","herbal","delicate"],colors:["blanc","rosé"],resp:"Our fish is grilled with care — delicate flesh, bright gremolata, gentle spicing. A crisp mineral white lets the fish shine."},
+    boeuf:{kw:["boeuf","beef","filet mignon","ribeye","faux filet","sharat","joue","cheek","friki"],traits:["bold","tannin","dark fruit","full","smoky","earthy","umami"],colors:["rouge"],resp:"Whether braised beef cheeks or aged ribeye, our beef dishes are rich and intense. Go bold with a structured red."},
+    poulet:{kw:["poulet","chicken","taouk","shish taouk"],traits:["medium","fresh","aromatic","round","fruit"],colors:["blanc","rosé","rouge"],resp:"The Shish Taouk's yogurt marinade and char give it lovely range — white, rosé, or even lighter red all work."},
+    pieuvre:{kw:["pieuvre","octopus","poulpe"],traits:["mineral","citrus","saline","medium","herbal"],colors:["blanc","rosé","orange"],resp:"Our octopus is seared with chickpeas and herbs — Mediterranean through and through. Salinity and texture work wonders."},
+    crevettes:{kw:["crevettes","shrimp","kataifi"],traits:["aromatic","round","fresh","floral","fruit"],colors:["blanc","bulles","rosé"],resp:"Kataifi shrimp with honey and zaatar — that sweet-savory contrast is magical with aromatic whites or sparkling."},
+    mouhammara:{kw:["mouhammara","muhammara"],traits:["spice","fruit","medium","round","earthy"],colors:["rosé","rouge","orange"],resp:"Mouhammara's sweet pepper heat and walnut richness pair wonderfully with fruity rosés or medium reds."},
+    halloumi:{kw:["halloumi","légumes","grilled vegetables"],traits:["smoky","mineral","herbal","medium","savory"],colors:["blanc","rosé","orange"],resp:"Smoky grilled vegetables and salty halloumi love mineral whites or skin-contact oranges."},
+    dessert:{kw:["dessert","kunafa","halaweit","safarjal","halva","sweet"],traits:["floral","sweet","aromatic","fruit","honeyed"],colors:["bulles"],resp:"For our desserts — think floral and gently sweet. A demi-sec sparkling or aromatic wine is lovely."},
+    mezzé:{kw:["mezzé","mezze","meze","plateau","spread","sharing"],traits:["versatile","fresh","mineral","medium","fruit","textured"],colors:["blanc","rosé","orange","bulles"],resp:"A mezzé spread calls for versatile, food-friendly wines — something with personality to match many flavors."},
+    borek:{kw:["borek","börek","cheese","fromage"],traits:["crisp","fresh","mineral","bubbles","citrus"],colors:["bulles","blanc"],resp:"Crispy cheese pastry loves the contrast of bright bubbles or mineral white to cut through richness."},
+  };
+
+  const TASTE_TAGS={
+    fresh:["fresh","frais","fraîche","refreshing","crisp","vif","light","léger","clean","easy"],
+    low_acid:["low acid","low acidity","peu acide","doux","douce","soft","smooth","mellow","gentle","rond","round","subtle"],
+    bold:["bold","audacieux","powerful","puissant","intense","rich","riche","full","big","heavy","strong","deep","robust"],
+    light:["light","léger","delicate","délicat","ethereal","airy","fin","fine","subtle"],
+    fruity:["fruity","fruit","fruits","fruité","berry","peach","cherry","apple","tropical","citrus"],
+    earthy:["earthy","terreux","mineral","minéral","stone","stony"],
+    spicy:["spicy","épicé","pepper","poivre","spice","warm"],
+    smoky:["smoky","fumé","smoke","charcoal","grilled","roasted"],
+    floral:["floral","flower","rose","violet","blossom","perfume","aromatic"],
+    dry:["dry","sec","brut","bone-dry"],
+    sweet:["sweet","sucré","doux","off-dry","demi-sec","honeyed"],
+    tannic:["tannic","tannin","structured","firm","grip"],
+    funky:["funky","natural","naturel","wild","sauvage","raw","alive","cloudy","unfiltered","orange wine"],
+    celebration:["celebration","celebrate","fête","special","occasion","anniversary","birthday","champagne","bubbles","sparkling"],
+    local:["local","québec","quebec","montréal","montreal","canadian","canada","ontario"],
+    middle_east:["middle east","moyen orient","moyen-orient","syrian","syrien","lebanese","libanais","liban","syria","syrie","greek","grec","grèce","armenian","arménie"],
+    italian:["italian","italien","italie","italy","piemonte","toscane","sicilia","barolo","barbaresco","brunello","chianti","etna","nebbiolo"],
+    french:["french","français","france","bordeaux","bourgogne","burgundy","loire","rhône","jura","alsace","champagne","chablis"],
+  };
+
+  const scoreWine=(wine,q)=>{
+    const ql=q.toLowerCase();let score=0;let reasons=[];
+    [wine.name,wine.producer,wine.grape,wine.region,wine.country].forEach(f=>{if(ql.includes(f.toLowerCase()))score+=20});
+    const pl=wine.profile.toLowerCase();
+    for(const[trait,keywords]of Object.entries(TASTE_TAGS)){
+      if(!keywords.some(k=>ql.includes(k)))continue;
+      if(trait==="fresh"&&/fresh|crisp|refreshing|light|mineral|bright/.test(pl)){score+=8;reasons.push("fresh")}
+      if(trait==="low_acid"&&/soft|silky|round|gentle|balanced|low acid/.test(pl)){score+=8;reasons.push("low acidity")}
+      if(trait==="bold"&&/full|bold|powerful|intense|rich|deep|dark|concentrated/.test(pl)){score+=8;reasons.push("bold")}
+      if(trait==="light"&&/light|delicate|ethereal|translucent|gentle|fine/.test(pl)){score+=8;reasons.push("light")}
+      if(trait==="fruity"&&/fruit|berry|cherry|peach|apple|plum|citrus|tropical/.test(pl)){score+=6;reasons.push("fruity")}
+      if(trait==="earthy"&&/earth|mineral|stone|chalk|slate|volcanic|granite/.test(pl)){score+=6;reasons.push("earthy")}
+      if(trait==="spicy"&&/pepper|spice|spicy|warm/.test(pl)){score+=6;reasons.push("spicy")}
+      if(trait==="smoky"&&/smoke|smoky|char|roast|toast/.test(pl)){score+=6;reasons.push("smoky")}
+      if(trait==="floral"&&/floral|rose|violet|blossom|flower|perfume|aromatic/.test(pl)){score+=6;reasons.push("floral")}
+      if(trait==="dry"&&/dry|brut|bone.dry/.test(pl))score+=5;
+      if(trait==="sweet"&&/sweet|off.dry|demi.sec|honeyed|honey/.test(pl))score+=5;
+      if(trait==="tannic"&&/tannin|structured|firm|grip|powerful/.test(pl))score+=5;
+      if(trait==="funky"&&/funky|natural|wild|raw|unfiltered|skin.contact|cloudy|alive/.test(pl)){score+=8;reasons.push("natural/funky")}
+      if(trait==="celebration"&&wine.color==="bulles"){score+=15;reasons.push("celebration")}
+      if(trait==="local"&&["Québec","Ontario"].includes(wine.country)){score+=12;reasons.push("local")}
+      if(trait==="middle_east"&&["Liban","Syrie","Grèce","Arménie"].includes(wine.country)){score+=12;reasons.push("Middle Eastern")}
+      if(trait==="italian"&&wine.country==="Italie"){score+=10;reasons.push("Italian")}
+      if(trait==="french"&&wine.country==="France"){score+=10;reasons.push("French")}
+    }
+    if(ql.includes("blanc")||ql.includes("white")){if(wine.color==="blanc")score+=10}
+    if(ql.includes("rouge")||ql.includes("red")){if(wine.color==="rouge")score+=10}
+    if(ql.includes("rosé")||ql.includes("rose ")){if(wine.color==="rosé")score+=10}
+    if(ql.includes("orange")){if(wine.color==="orange")score+=10}
+    if(ql.includes("bulles")||ql.includes("sparkling")||ql.includes("champagne")||ql.includes("pétillant")){if(wine.color==="bulles")score+=10}
+    const pm=ql.match(/(?:under|moins de|below|max|budget|around|environ)\s*(\d+)/);
+    if(pm){const mx=parseInt(pm[1]);if(wine.price<=mx)score+=8;else score-=15}
+    if((ql.includes("cheap")||ql.includes("affordable")||ql.includes("pas cher")||ql.includes("budget"))&&wine.price<100)score+=6;
+    if((ql.includes("splurge")||ql.includes("special")||ql.includes("best")||ql.includes("meilleur"))&&wine.price>200)score+=5;
+    if((ql.includes("glass")||ql.includes("verre"))&&wine.section==="By the Glass")score+=12;
+    return{score,reasons:[...new Set(reasons)]};
+  };
+
+  const askAI=(q)=>{
+    setAiLoading(true);setAiResp(null);setAiWines([]);
+    setTimeout(()=>{
+      const ql=q.toLowerCase();let response="";let scoredWines=[];let foodMatch=null;
+      for(const[key,food]of Object.entries(FOOD_PAIRINGS)){if(food.kw.some(k=>ql.includes(k))){foodMatch=key;break}}
+      if(foodMatch){
+        const food=FOOD_PAIRINGS[foodMatch];
+        scoredWines=W.map(w=>{let s=0;const pl=w.profile.toLowerCase();if(food.colors.includes(w.color))s+=10;if(food.avoid?.includes(w.color))s-=20;food.traits.forEach(t=>{if(pl.includes(t))s+=5});if(["Liban","Syrie","Grèce","Arménie"].includes(w.country))s+=3;if(w.section==="By the Glass")s+=2;if(w.price<100)s+=1;return{wine:w,score:s}}).filter(s=>s.score>5).sort((a,b)=>b.score-a.score);
+        response=food.resp+"\n\nHere are my picks:";
+      }else{
+        scoredWines=W.map(w=>{const{score,reasons}=scoreWine(w,q);return{wine:w,score,reasons}}).filter(s=>s.score>3).sort((a,b)=>b.score-a.score);
+        if(scoredWines.length>0){const t=scoredWines[0].reasons?.slice(0,3).join(", ")||"";response=t?`Great taste. Looking for something ${t}, here's what I'd pour for you:`:`Based on what you're looking for, here are some excellent options:`}
+        else response="I'd love to help — tell me more about what you're in the mood for. A color (white, red, rosé), a style (fresh, bold, funky), a dish you're ordering, or a budget?"
+      }
+      const top=scoredWines.slice(0,4).map(s=>s.wine);
+      if(top.length>0){const notes=top.map(w=>`\n• ${w.name} (${w.producer}, ${w.price}$) — ${w.profile.split('.')[0]}.`).join("");response+=notes}
+      setAiResp(response);setAiWines(top);setAiLoading(false);
+    },600);
+  };
+
+  const filtered=aiMode?[]:W.filter(w=>{
+    const sec=w.section===section;
+    const srch=!query||[w.name,w.producer,w.grape,w.region,w.country,w.profile].some(f=>f.toLowerCase().includes(query.toLowerCase()));
+    const pr=priceFilter==="all"||(priceFilter==="u100"&&w.price<100)||(priceFilter==="100"&&w.price>=100&&w.price<=200)||(priceFilter==="200"&&w.price>200&&w.price<=500)||(priceFilter==="500"&&w.price>500);
+    return sec&&srch&&pr;
+  });
+  const grouped={};filtered.forEach(w=>{if(!grouped[w.color])grouped[w.color]=[];grouped[w.color].push(w)});
+
+  const WineCard=({wine})=>(
+    <div className="wc" onClick={()=>setSelected(wine)} style={{padding:"13px 16px",background:C.surface,border:`1px solid ${C.border}`,borderRadius:6,display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:14,cursor:"pointer"}}>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{display:"flex",alignItems:"baseline",gap:8,flexWrap:"wrap"}}>
+          <span style={{width:6,height:6,borderRadius:"50%",background:DOTS[wine.color],display:"inline-block",flexShrink:0}}/>
+          <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:15,fontWeight:500,color:C.white}}>{wine.name}</span>
+          <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:C.muted}}>{wine.producer}</span>
+        </div>
+        <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:C.muted,marginTop:4,display:"flex",gap:6,flexWrap:"wrap"}}>
+          <span>{FLAGS[wine.country]||"🍷"} {wine.grape}</span><span style={{color:C.border}}>•</span><span>{wine.region}</span>
+        </div>
+      </div>
+      <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:16,fontWeight:500,color:C.gold,whiteSpace:"nowrap"}}>{wine.price}$</span>
+    </div>
+  );
+
+  return(
+    <div style={{minHeight:"100vh",background:C.bg,color:C.text,fontFamily:"Georgia,serif"}}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+        *{box-sizing:border-box;margin:0;padding:0}
+        ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:${C.border};border-radius:4px}
+        .wc{transition:all .25s ease}.wc:hover{transform:translateY(-1px);background:${C.card}!important;border-color:${C.gold}!important}
+        .tb{transition:all .3s;cursor:pointer;border:none;background:none}.tb:hover{color:${C.gold}!important}
+        .sb{transition:all .2s;cursor:pointer;white-space:nowrap}.sb:hover{color:${C.gold}!important}
+        .pl{transition:all .2s;cursor:pointer}.pl:hover{background:${C.gold}!important;color:${C.bg}!important}
+        .fi{transition:all .2s}.fi:hover{background:${C.card}!important}
+        .si:focus{outline:none;border-color:${C.gold}!important}
+        .mo{animation:fi .25s ease}.mc{animation:su .3s ease}
+        @keyframes fi{from{opacity:0}to{opacity:1}}@keyframes su{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes pu{0%,100%{opacity:.4}50%{opacity:1}}.ad{animation:pu 1.4s ease-in-out infinite}
+        .hint{transition:all .2s;cursor:pointer}.hint:hover{border-color:${C.gold}!important;color:${C.gold}!important}
+      `}</style>
+      <header style={{padding:"32px 24px 0",textAlign:"center",borderBottom:`1px solid ${C.border}`}}>
+        <h1 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"clamp(36px,6vw,52px)",fontWeight:300,color:C.white,letterSpacing:"8px",textTransform:"uppercase",marginBottom:4}}>Damas</h1>
+        <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:C.muted,letterSpacing:"3px",textTransform:"uppercase",marginBottom:24}}>Carte des Vins & Cocktails • {W.length} vins</p>
+        <div style={{display:"flex",justifyContent:"center",marginBottom:-1}}>
+          {[{id:"wine",l:"Carte des Vins"},{id:"drinks",l:"Cocktails & Boissons"}].map(t=>(
+            <button key={t.id} className="tb" onClick={()=>{setTab(t.id);setAiMode(false);setAiResp(null);setAiWines([]);setQuery("")}}
+              style={{padding:"12px 28px",fontFamily:"'Cormorant Garamond',serif",fontSize:15,fontWeight:tab===t.id?500:400,color:tab===t.id?C.gold:C.muted,borderBottom:tab===t.id?`2px solid ${C.gold}`:"2px solid transparent",letterSpacing:"1px"}}>{t.l}</button>
+          ))}
+        </div>
+      </header>
+
+      {tab==="wine"&&(
+        <div style={{maxWidth:960,margin:"0 auto",padding:"0 16px"}}>
+          <div style={{padding:"20px 0 8px"}}>
+            <div style={{display:"flex",gap:8,alignItems:"stretch"}}>
+              <div style={{flex:1,position:"relative"}}>
+                <input ref={inputRef} className="si" type="text" value={query}
+                  placeholder={aiMode?"Ask anything — \"fresh wine with low acidity\", \"what goes with the fattouch?\"":"Search wines, grapes, regions..."}
+                  onChange={e=>{setQuery(e.target.value);if(aiMode){setAiResp(null);setAiWines([])}}}
+                  onKeyDown={e=>{if(e.key==="Enter"&&aiMode&&query.trim()&&!aiLoading){e.preventDefault();askAI(query)}}}
+                  style={{width:"100%",padding:"12px 16px 12px 40px",background:aiMode?C.aiBg:C.surface,border:`1px solid ${aiMode?C.aiBdr:C.border}`,borderRadius:8,color:C.cream,fontFamily:"'DM Sans',sans-serif",fontSize:13}}
+                />
+                <span style={{position:"absolute",left:14,top:"50%",transform:"translateY(-50%)",fontSize:14,opacity:.5}}>{aiMode?"✦":"⌕"}</span>
+              </div>
+              <button type="button" onClick={()=>{setAiMode(!aiMode);setAiResp(null);setAiWines([]);setQuery("");setTimeout(()=>inputRef.current?.focus(),100)}}
+                style={{padding:"0 16px",borderRadius:8,border:`1px solid ${aiMode?C.gold:C.border}`,background:aiMode?C.gold:"transparent",color:aiMode?C.bg:C.muted,fontFamily:"'DM Sans',sans-serif",fontSize:11,fontWeight:500,cursor:"pointer",whiteSpace:"nowrap",transition:"all .2s"}}>
+                {aiMode?"✦ Sommelier ON":"✦ Ask Sommelier"}
+              </button>
+              {aiMode&&query.trim()&&!aiResp&&(
+                <button type="button" disabled={aiLoading} onClick={()=>{if(query.trim()&&!aiLoading)askAI(query)}}
+                  style={{padding:"0 20px",borderRadius:8,border:"none",background:aiLoading?C.border:C.gold,color:C.bg,fontFamily:"'DM Sans',sans-serif",fontSize:12,fontWeight:500,cursor:aiLoading?"wait":"pointer",whiteSpace:"nowrap"}}>
+                  {aiLoading?"...":"Ask"}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {aiMode&&!aiResp&&!aiLoading&&(
+            <div style={{padding:"12px 0 20px"}}>
+              <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:C.muted,marginBottom:12}}>Try asking:</p>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                {["A fresh wine with low acidity","What goes well with the fattouch?","Something from the Middle East under 100$","A bold red for the lamb rack","Natural wine, funky and orange","Best bottle for a celebration"].map(h=>(
+                  <button key={h} className="hint" onClick={()=>{setQuery(h);askAI(h)}}
+                    style={{padding:"6px 12px",borderRadius:20,border:`1px solid ${C.border}`,background:"transparent",color:C.text,fontFamily:"'DM Sans',sans-serif",fontSize:11}}>{h}</button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {aiLoading&&(<div style={{padding:"32px 0",textAlign:"center"}}><div style={{display:"flex",justifyContent:"center",gap:6,marginBottom:12}}>{[0,1,2].map(i=><div key={i} className="ad" style={{width:6,height:6,borderRadius:"50%",background:C.gold,animationDelay:`${i*.2}s`}}/>)}</div><p style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:C.muted}}>Your sommelier is thinking...</p></div>)}
+
+          {aiResp&&(
+            <div style={{padding:"16px 0 8px"}}>
+              <div style={{padding:"20px 24px",background:C.aiBg,border:`1px solid ${C.aiBdr}`,borderRadius:10,marginBottom:16}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}><span style={{fontSize:14}}>✦</span><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:C.gold,letterSpacing:"2px",textTransform:"uppercase",fontWeight:500}}>Sommelier</span></div>
+                <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:15,color:C.cream,lineHeight:1.7,whiteSpace:"pre-line"}}>{aiResp}</p>
+              </div>
+              {aiWines.length>0&&(<div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:20}}><p style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:C.gold,letterSpacing:"2px",textTransform:"uppercase",marginBottom:4}}>Recommended wines</p>{aiWines.map((w,i)=><WineCard key={i} wine={w}/>)}</div>)}
+              <button onClick={()=>{setAiResp(null);setAiWines([]);setQuery("");inputRef.current?.focus()}} style={{padding:"8px 16px",borderRadius:6,border:`1px solid ${C.border}`,background:"transparent",color:C.muted,fontFamily:"'DM Sans',sans-serif",fontSize:11,cursor:"pointer"}}>Ask another question</button>
+            </div>
+          )}
+
+          {!aiMode&&(<>
+            <div style={{display:"flex",gap:6,padding:"4px 0 12px",flexWrap:"wrap"}}>
+              {[{id:"all",l:"All"},{id:"u100",l:"<100$"},{id:"100",l:"100-200$"},{id:"200",l:"200-500$"},{id:"500",l:"500$+"}].map(f=>(
+                <button key={f.id} className="pl" onClick={()=>setPriceFilter(f.id)} style={{padding:"5px 12px",borderRadius:20,border:`1px solid ${priceFilter===f.id?C.gold:C.border}`,background:priceFilter===f.id?C.gold:"transparent",color:priceFilter===f.id?C.bg:C.muted,fontFamily:"'DM Sans',sans-serif",fontSize:11,fontWeight:priceFilter===f.id?500:400,cursor:"pointer"}}>{f.l}</button>
+              ))}
+            </div>
+            <div style={{display:"flex",gap:4,overflowX:"auto",padding:"4px 0 16px",borderBottom:`1px solid ${C.border}`}}>
+              {SECTIONS.map(s=>(<button key={s} className="sb" onClick={()=>setSection(s)} style={{padding:"6px 14px",borderRadius:4,border:"none",background:section===s?C.card:"transparent",color:section===s?C.gold:C.muted,fontFamily:"'DM Sans',sans-serif",fontSize:12,fontWeight:section===s?500:400}}>{s}</button>))}
+            </div>
+            <div style={{padding:"20px 0 40px"}}>
+              {Object.entries(grouped).map(([color,wines])=>(
+                <div key={color} style={{marginBottom:28}}>
+                  <h3 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:18,fontWeight:400,color:C.cream,marginBottom:12,paddingBottom:6,borderBottom:`1px solid ${C.border}`,display:"flex",alignItems:"center",gap:8}}>
+                    <span style={{width:8,height:8,borderRadius:"50%",background:DOTS[color]}}/>{CLABELS[color]}<span style={{fontSize:12,color:C.muted,fontFamily:"'DM Sans',sans-serif",fontWeight:400}}>({wines.length})</span>
+                  </h3>
+                  <div style={{display:"flex",flexDirection:"column",gap:8}}>{wines.map((w,i)=><WineCard key={i} wine={w}/>)}</div>
+                </div>
+              ))}
+              {Object.keys(grouped).length===0&&<p style={{textAlign:"center",padding:40,fontFamily:"'DM Sans',sans-serif",fontSize:13,color:C.muted}}>No wines match your search.</p>}
+            </div>
+          </>)}
+        </div>
+      )}
+
+      {tab==="drinks"&&(
+        <div style={{maxWidth:960,margin:"0 auto",padding:"0 16px"}}>
+          <div style={{display:"flex",gap:4,overflowX:"auto",padding:"20px 0 16px",borderBottom:`1px solid ${C.border}`}}>
+            {Object.keys(COCKTAILS_DATA).map(s=>(<button key={s} className="sb" onClick={()=>setDrinkSec(s)} style={{padding:"6px 14px",borderRadius:4,border:"none",background:drinkSec===s?C.card:"transparent",color:drinkSec===s?C.gold:C.muted,fontFamily:"'DM Sans',sans-serif",fontSize:12,fontWeight:drinkSec===s?500:400}}>{s}</button>))}
+          </div>
+          <div style={{padding:"20px 0 40px"}}>
+            <h3 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:24,fontWeight:400,color:C.cream,marginBottom:20}}>{drinkSec}</h3>
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {COCKTAILS_DATA[drinkSec]?.map((item,i)=>(
+                <div key={i} className="fi" style={{padding:"14px 18px",background:C.surface,border:`1px solid ${C.border}`,borderRadius:6,display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:16}}>
+                  <div>
+                    <h4 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:16,fontWeight:500,color:C.white,marginBottom:item.desc?4:0}}>{item.name}</h4>
+                    {item.desc&&<p style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:C.muted,lineHeight:1.4}}>{item.desc}</p>}
+                    {item.name?.includes("*")&&<span style={{display:"inline-block",padding:"2px 8px",borderRadius:3,fontSize:10,letterSpacing:".5px",textTransform:"uppercase",background:"#2A2832",color:"#9A8AC4",marginTop:4}}>Sans alcool disponible</span>}
+                  </div>
+                  <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:17,fontWeight:500,color:C.gold,whiteSpace:"nowrap"}}>{item.price}$</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selected&&(
+        <div className="mo" onClick={()=>setSelected(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.75)",display:"flex",alignItems:"center",justifyContent:"center",padding:20,zIndex:1000}}>
+          <div className="mc" onClick={e=>e.stopPropagation()} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,maxWidth:500,width:"100%",maxHeight:"85vh",overflow:"auto"}}>
+            <div style={{padding:"28px 28px 20px",borderBottom:`1px solid ${C.border}`,position:"relative"}}>
+              <button onClick={()=>setSelected(null)} style={{position:"absolute",top:16,right:16,background:"none",border:"none",color:C.muted,fontSize:20,cursor:"pointer"}}>✕</button>
+              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:C.gold,letterSpacing:"2px",textTransform:"uppercase",marginBottom:8}}>{FLAGS[selected.country]||"🍷"} {selected.country} · {selected.section}</div>
+              <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:26,fontWeight:400,color:C.white,lineHeight:1.2,marginBottom:4,paddingRight:30}}>{selected.name}</h2>
+              <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:C.muted}}>{selected.producer}</p>
+            </div>
+            <div style={{padding:"20px 28px"}}>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:20}}>
+                <div><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:C.muted,letterSpacing:"1px",textTransform:"uppercase",marginBottom:4}}>Grape</div><div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:15,color:C.cream}}>{selected.grape}</div></div>
+                <div><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:C.muted,letterSpacing:"1px",textTransform:"uppercase",marginBottom:4}}>Region</div><div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:15,color:C.cream}}>{selected.region}</div></div>
+                <div><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:C.muted,letterSpacing:"1px",textTransform:"uppercase",marginBottom:4}}>Color</div><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{width:8,height:8,borderRadius:"50%",background:DOTS[selected.color]}}/><span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:15,color:C.cream,textTransform:"capitalize"}}>{selected.color}</span></div></div>
+              </div>
+              <div style={{marginBottom:24}}>
+                <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:C.muted,letterSpacing:"1px",textTransform:"uppercase",marginBottom:8}}>Tasting Profile</div>
+                <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:15,color:C.text,lineHeight:1.65,fontStyle:"italic"}}>{selected.profile}</p>
+              </div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"16px 0 8px",borderTop:`1px solid ${C.border}`}}>
+                <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:28,fontWeight:500,color:C.gold}}>{selected.price}$</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      <footer style={{textAlign:"center",padding:"24px",borderTop:`1px solid ${C.border}`,fontFamily:"'DM Sans',sans-serif",fontSize:11,color:C.muted}}>Damas — 1201 Avenue Van Horne, Montréal</footer>
+    </div>
+  );
+}
+
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(React.createElement(App));
+  </script>
+
+</body>
+</html>
